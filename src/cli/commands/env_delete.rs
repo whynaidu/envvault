@@ -100,10 +100,7 @@ mod tests {
         let name = "dev";
         let active_env = "dev";
 
-        assert!(
-            name == active_env,
-            "should detect active environment"
-        );
+        assert!(name == active_env, "should detect active environment");
 
         // With --force, deletion proceeds even for the active env.
         let force = true;
