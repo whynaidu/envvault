@@ -1,5 +1,5 @@
 [package]
-name = "envvault"
+name = "envvault-cli"
 version = "0.4.0"
 edition = "2021"
 rust-version = "1.70"
@@ -7,11 +7,19 @@ description = "A local-first encrypted environment variable manager"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/whynaidu/envvault"
 homepage = "https://github.com/whynaidu/envvault"
-documentation = "https://docs.rs/envvault"
+documentation = "https://docs.rs/envvault-cli"
 readme = "README.md"
 keywords = ["cli", "secrets", "encryption", "env", "vault"]
 categories = ["command-line-utilities", "cryptography"]
 exclude = [".github/", "tests/", "*.vault", "install.sh", "Formula/", "CHANGELOG.md"]
+
+[[bin]]
+name = "envvault"
+path = "src/main.rs"
+
+[lib]
+name = "envvault"
+path = "src/lib.rs"
 
 [dependencies]
 # CLI

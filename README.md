@@ -28,7 +28,7 @@ Replace plaintext `.env` files with AES-256-GCM encrypted vault files. No cloud 
 ### Cargo (from source)
 
 ```sh
-cargo install envvault
+cargo install envvault-cli
 ```
 
 ### Download binary
@@ -128,8 +128,8 @@ EnvVault has two optional Cargo feature flags:
 
 | Feature | Description |
 |---------|-------------|
-| `keyring-store` | Enable OS keyring integration for auto-unlock (`cargo install envvault --features keyring-store`) |
-| `version-check` | Check for new versions on `envvault version` (`cargo install envvault --features version-check`) |
+| `keyring-store` | Enable OS keyring integration for auto-unlock (`cargo install envvault-cli --features keyring-store`) |
+| `version-check` | Check for new versions on `envvault version` (`cargo install envvault-cli --features version-check`) |
 
 Both are disabled by default to minimize dependencies.
 
