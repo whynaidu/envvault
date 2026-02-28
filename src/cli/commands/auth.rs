@@ -126,11 +126,14 @@ mod tests {
         use clap::Parser;
 
         let dir = TempDir::new().unwrap();
-        let kf_path = dir.path().join("vault.keyfile");
+        // Canonicalize to resolve symlinks (macOS: /var -> /private/var)
+        // so the test path matches what std::env::current_dir() returns.
+        let dir_path = dir.path().canonicalize().unwrap();
+        let kf_path = dir_path.join("vault.keyfile");
 
         // Change to temp dir so .gitignore is written there.
         let original_dir = std::env::current_dir().unwrap();
-        std::env::set_current_dir(dir.path()).unwrap();
+        std::env::set_current_dir(&dir_path).unwrap();
 
         let cli = crate::cli::Cli::parse_from([
             "envvault",
@@ -146,7 +149,7 @@ mod tests {
         // Restore original dir.
         std::env::set_current_dir(original_dir).unwrap();
 
-        let gitignore = std::fs::read_to_string(dir.path().join(".gitignore")).unwrap_or_default();
+        let gitignore = std::fs::read_to_string(dir_path.join(".gitignore")).unwrap_or_default();
         assert!(
             gitignore.contains("keyfile"),
             "gitignore should contain keyfile entry: {gitignore}"
