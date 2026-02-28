@@ -38,7 +38,7 @@ Grab the latest release for your platform from [GitHub Releases](https://github.
 ### Homebrew (macOS / Linux)
 
 ```sh
-brew install vedant-naidu/tap/envvault
+brew install whynaidu/tap/envvault
 ```
 
 ### Curl installer
