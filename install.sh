@@ -2,7 +2,7 @@
 # EnvVault installer — downloads the latest release binary for your platform.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/vedant-naidu/envvault/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/whynaidu/envvault/main/install.sh | sh
 #
 # Environment variables:
 #   ENVVAULT_VERSION   — install a specific version (e.g. "v0.4.0")
@@ -10,7 +10,7 @@
 
 set -eu
 
-REPO="vedant-naidu/envvault"
+REPO="whynaidu/envvault"
 BINARY="envvault"
 
 # ── Helpers ──────────────────────────────────────────────────────────

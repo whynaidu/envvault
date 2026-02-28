@@ -2,7 +2,7 @@
 
 **A local-first encrypted environment variable manager.**
 
-[![CI](https://github.com/vedant-naidu/envvault/actions/workflows/ci.yml/badge.svg)](https://github.com/vedant-naidu/envvault/actions/workflows/ci.yml)
+[![CI](https://github.com/whynaidu/envvault/actions/workflows/ci.yml/badge.svg)](https://github.com/whynaidu/envvault/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/envvault)](https://crates.io/crates/envvault)
 [![License](https://img.shields.io/crates/l/envvault)](LICENSE-MIT)
 
@@ -33,7 +33,7 @@ cargo install envvault
 
 ### Download binary
 
-Grab the latest release for your platform from [GitHub Releases](https://github.com/vedant-naidu/envvault/releases).
+Grab the latest release for your platform from [GitHub Releases](https://github.com/whynaidu/envvault/releases).
 
 ### Homebrew (macOS / Linux)
 
@@ -44,7 +44,7 @@ brew install vedant-naidu/tap/envvault
 ### Curl installer
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vedant-naidu/envvault/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/whynaidu/envvault/main/install.sh | sh
 ```
 
 ## Quick Start
