@@ -9,6 +9,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
+use zeroize::Zeroize;
+
 use crate::cli::env_parser::parse_env_line;
 use crate::cli::output;
 use crate::cli::{load_keyfile, prompt_password_for_vault, vault_path, Cli};
@@ -24,7 +26,7 @@ pub fn execute(cli: &Cli) -> Result<()> {
     let password = prompt_password_for_vault(Some(&vault_id))?;
     let mut store = VaultStore::open(&path, password.as_bytes(), keyfile.as_deref())?;
 
-    let secrets = store.get_all_secrets()?;
+    let mut secrets = store.get_all_secrets()?;
 
     // Write secrets to a temp file in KEY=VALUE format.
     let tmp_path = write_temp_file(&secrets)?;
@@ -40,6 +42,9 @@ pub fn execute(cli: &Cli) -> Result<()> {
 
     if !status.success() {
         secure_delete(&tmp_path);
+        for v in secrets.values_mut() {
+            v.zeroize();
+        }
         return Err(EnvVaultError::EditorError(format!(
             "editor exited with code {}",
             status.code().unwrap_or(-1)
@@ -47,16 +52,27 @@ pub fn execute(cli: &Cli) -> Result<()> {
     }
 
     // Parse the edited file.
-    let edited_content = fs::read_to_string(&tmp_path)
+    let mut edited_content = fs::read_to_string(&tmp_path)
         .map_err(|e| EnvVaultError::EditorError(format!("failed to read edited file: {e}")))?;
 
     // Securely wipe and delete temp file immediately.
     secure_delete(&tmp_path);
 
-    let new_secrets = parse_edited_content(&edited_content);
+    let mut new_secrets = parse_edited_content(&edited_content);
+
+    // Zeroize the raw edited content — no longer needed.
+    edited_content.zeroize();
 
     // Compute and apply changes.
     let (added, removed, changed) = apply_changes(&mut store, &secrets, &new_secrets)?;
+
+    // Zeroize plaintext secrets from memory — no longer needed.
+    for v in secrets.values_mut() {
+        v.zeroize();
+    }
+    for v in new_secrets.values_mut() {
+        v.zeroize();
+    }
 
     if added == 0 && removed == 0 && changed == 0 {
         output::info("No changes detected.");

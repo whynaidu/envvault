@@ -2,6 +2,8 @@
 
 use std::process::Command;
 
+use zeroize::Zeroize;
+
 use crate::cli::output;
 use crate::cli::{load_keyfile, prompt_password_for_vault, vault_path, Cli};
 use crate::errors::{EnvVaultError, Result};
@@ -21,7 +23,7 @@ pub fn execute(cli: &Cli, command: &[String], clean_env: bool) -> Result<()> {
     let store = VaultStore::open(&path, password.as_bytes(), keyfile.as_deref())?;
 
     // Decrypt all secrets into memory.
-    let secrets = store.get_all_secrets()?;
+    let mut secrets = store.get_all_secrets()?;
 
     if clean_env {
         output::success(&format!(
@@ -48,6 +50,11 @@ pub fn execute(cli: &Cli, command: &[String], clean_env: bool) -> Result<()> {
     }
 
     let status = cmd.envs(&secrets).status()?;
+
+    // Zeroize plaintext secrets — the child process has its own copies.
+    for v in secrets.values_mut() {
+        v.zeroize();
+    }
 
     // Forward the child's exit code.
     match status.code() {

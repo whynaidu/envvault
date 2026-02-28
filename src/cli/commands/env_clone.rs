@@ -138,8 +138,47 @@ mod tests {
     #[test]
     fn clone_fails_if_target_exists() {
         let dir = tempfile::TempDir::new().unwrap();
-        let path = dir.path().join("staging.vault");
-        std::fs::write(&path, b"exists").unwrap();
-        assert!(path.exists());
+        let secrets = HashMap::new();
+        create_test_vault(dir.path(), "dev", "testpassword1", &secrets);
+        create_test_vault(dir.path(), "staging", "testpassword1", &secrets);
+
+        // Attempting to create at an existing path should fail.
+        let target_path = dir.path().join("staging.vault");
+        let result = VaultStore::create(&target_path, b"testpassword1", "staging", None, None);
+        assert!(
+            result.is_err(),
+            "should fail when target vault already exists"
+        );
+    }
+
+    #[test]
+    fn clone_with_different_password() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut secrets = HashMap::new();
+        secrets.insert("DB_URL".into(), "postgres://localhost".into());
+        create_test_vault(dir.path(), "dev", "source-pass1", &secrets);
+
+        // Clone dev -> staging with a different password.
+        let source_path = dir.path().join("dev.vault");
+        let staging_path = dir.path().join("staging.vault");
+        let source = VaultStore::open(&source_path, b"source-pass1", None).unwrap();
+        let source_secrets = source.get_all_secrets().unwrap();
+
+        let mut target =
+            VaultStore::create(&staging_path, b"target-pass2", "staging", None, None).unwrap();
+        for (k, v) in &source_secrets {
+            target.set_secret(k, v).unwrap();
+        }
+        target.save().unwrap();
+
+        // Original password should NOT work on clone.
+        assert!(VaultStore::open(&staging_path, b"source-pass1", None).is_err());
+
+        // New password should work.
+        let reopened = VaultStore::open(&staging_path, b"target-pass2", None).unwrap();
+        assert_eq!(
+            reopened.get_secret("DB_URL").unwrap(),
+            "postgres://localhost"
+        );
     }
 }

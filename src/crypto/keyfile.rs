@@ -170,7 +170,7 @@ mod tests {
     fn load_keyfile_fails_on_wrong_length() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("bad.keyfile");
-        fs::write(&path, &[0u8; 16]).unwrap();
+        fs::write(&path, [0u8; 16]).unwrap();
 
         let result = load_keyfile(&path);
         assert!(result.is_err());

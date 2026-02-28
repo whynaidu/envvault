@@ -6,6 +6,8 @@
 
 use std::collections::BTreeSet;
 
+use zeroize::Zeroize;
+
 use crate::cli::output;
 use crate::cli::{load_keyfile, prompt_password_for_vault, Cli};
 use crate::errors::{EnvVaultError, Result};
@@ -40,10 +42,10 @@ pub fn execute(cli: &Cli, target_env: &str, show_values: bool) -> Result<()> {
     let vault_id = source_path.to_string_lossy();
     let password = prompt_password_for_vault(Some(&vault_id))?;
     let source = VaultStore::open(&source_path, password.as_bytes(), keyfile.as_deref())?;
-    let source_secrets = source.get_all_secrets()?;
+    let mut source_secrets = source.get_all_secrets()?;
 
     // Try opening target with the same password first.
-    let target_secrets =
+    let mut target_secrets =
         match VaultStore::open(&target_path, password.as_bytes(), keyfile.as_deref()) {
             Ok(target) => target.get_all_secrets()?,
             Err(EnvVaultError::HmacMismatch | EnvVaultError::DecryptionFailed) => {
@@ -79,6 +81,14 @@ pub fn execute(cli: &Cli, target_env: &str, show_values: bool) -> Result<()> {
         &target_secrets,
         show_values,
     );
+
+    // Zeroize plaintext secrets before returning.
+    for v in source_secrets.values_mut() {
+        v.zeroize();
+    }
+    for v in target_secrets.values_mut() {
+        v.zeroize();
+    }
 
     Ok(())
 }

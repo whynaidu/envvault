@@ -8,6 +8,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
+use zeroize::Zeroize;
+
 use crate::cli::output;
 use crate::cli::{load_keyfile, prompt_password_for_vault, vault_path, Cli};
 use crate::errors::{EnvVaultError, Result};
@@ -26,10 +28,10 @@ pub fn execute(cli: &Cli, format: &str, output_path: Option<&str>) -> Result<()>
     let secrets = store.get_all_secrets()?;
 
     // Sort by key for deterministic output.
-    let sorted: BTreeMap<_, _> = secrets.into_iter().collect();
+    let mut sorted: BTreeMap<_, _> = secrets.into_iter().collect();
 
     // Format the output.
-    let content = match format {
+    let mut content = match format {
         "env" => format_as_env(&sorted),
         "json" => format_as_json(&sorted)?,
         other => {
@@ -77,6 +79,12 @@ pub fn execute(cli: &Cli, format: &str, output_path: Option<&str>) -> Result<()>
             print!("{content}");
         }
     }
+
+    // Zeroize plaintext secrets before returning.
+    for v in sorted.values_mut() {
+        v.zeroize();
+    }
+    content.zeroize();
 
     Ok(())
 }
