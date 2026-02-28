@@ -48,7 +48,7 @@ clap_complete = "4.5"
 keyring = { version = "3.6", features = ["linux-native"], optional = true }
 
 # Version check (optional — enable with `cargo build --features version-check`)
-ureq = { version = "2.9", optional = true }
+ureq = { version = "2.9", features = ["json"], optional = true }
 
 # Constant-time comparison
 subtle = "2.6"

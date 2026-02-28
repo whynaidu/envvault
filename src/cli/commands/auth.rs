@@ -10,7 +10,9 @@
 
 use crate::cli::output;
 use crate::cli::Cli;
-use crate::errors::{EnvVaultError, Result};
+#[cfg(not(feature = "keyring-store"))]
+use crate::errors::EnvVaultError;
+use crate::errors::Result;
 
 /// Execute `envvault auth keyring` — save or delete password in OS keyring.
 pub fn execute_keyring(cli: &Cli, delete: bool) -> Result<()> {
