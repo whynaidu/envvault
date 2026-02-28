@@ -1,0 +1,19 @@
+# Build artifacts
+/target/
+/dist/
+
+# EnvVault data (never commit secrets)
+.envvault/
+*.vault
+audit.db
+*.keyfile
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.iml

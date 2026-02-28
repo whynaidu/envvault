@@ -1,0 +1,68 @@
+[package]
+name = "envvault"
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.70"
+description = "A local-first encrypted environment variable manager"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vedant-naidu/envvault"
+homepage = "https://github.com/vedant-naidu/envvault"
+documentation = "https://docs.rs/envvault"
+readme = "README.md"
+keywords = ["cli", "secrets", "encryption", "env", "vault"]
+categories = ["command-line-utilities", "cryptography"]
+exclude = [".github/", "tests/", "*.vault", "install.sh", "Formula/", "CHANGELOG.md"]
+
+[dependencies]
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+console = "0.15.11"
+comfy-table = "7.2"
+dialoguer = "0.11.0"
+
+# Crypto
+aes-gcm = "0.10.3"
+argon2 = "0.5.3"
+hkdf = "0.12.4"
+sha2 = "0.10.9"
+hmac = "0.12.1"
+rand = "0.8.5"
+zeroize = { version = "1.8", features = ["derive"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8.23"
+base64 = "0.22.1"
+
+# Errors
+thiserror = "2.0"
+
+# Audit log
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# Shell completions
+clap_complete = "4.5"
+
+# OS keyring (optional — enable with `cargo build --features keyring-store`)
+keyring = { version = "3.6", features = ["linux-native"], optional = true }
+
+# Version check (optional — enable with `cargo build --features version-check`)
+ureq = { version = "2.9", optional = true }
+
+# Constant-time comparison
+subtle = "2.6"
+
+# Misc
+chrono = { version = "0.4.44", features = ["serde"] }
+
+[features]
+default = []
+keyring-store = ["dep:keyring"]
+version-check = ["dep:ureq"]
+
+[dev-dependencies]
+assert_cmd = "2.1"
+predicates = "3.1"
+assert_fs = "1.1"
+tempfile = "3.26"
