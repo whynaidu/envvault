@@ -46,7 +46,7 @@ target_triple() {
     os="$1"
     arch="$2"
     case "${os}" in
-        linux) echo "${arch}-unknown-linux-gnu" ;;
+        linux) echo "${arch}-unknown-linux-musl" ;;
         macos) echo "${arch}-apple-darwin" ;;
     esac
 }

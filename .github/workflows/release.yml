@@ -18,11 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
             archive: tar.gz
             use_cross: false
-          - target: aarch64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
             archive: tar.gz
             use_cross: true
@@ -50,10 +50,10 @@ jobs:
         with:
           key: release-${{ matrix.target }}
 
-      # Linux needs libdbus-1-dev for native builds (cross has its own sysroot)
+      # Linux musl builds need musl-tools for static linking
       - name: Install system dependencies (Linux native)
         if: runner.os == 'Linux' && !matrix.use_cross
-        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y musl-tools pkg-config
 
       - name: Install cross
         if: matrix.use_cross
@@ -127,8 +127,8 @@ jobs:
 
           sha_macos_arm=$(awk '{print $1}' "artifacts/envvault-${TAG}-aarch64-apple-darwin.tar.gz.sha256")
           sha_macos_intel=$(awk '{print $1}' "artifacts/envvault-${TAG}-x86_64-apple-darwin.tar.gz.sha256")
-          sha_linux_arm=$(awk '{print $1}' "artifacts/envvault-${TAG}-aarch64-unknown-linux-gnu.tar.gz.sha256")
-          sha_linux_intel=$(awk '{print $1}' "artifacts/envvault-${TAG}-x86_64-unknown-linux-gnu.tar.gz.sha256")
+          sha_linux_arm=$(awk '{print $1}' "artifacts/envvault-${TAG}-aarch64-unknown-linux-musl.tar.gz.sha256")
+          sha_linux_intel=$(awk '{print $1}' "artifacts/envvault-${TAG}-x86_64-unknown-linux-musl.tar.gz.sha256")
 
           echo "sha_macos_arm=${sha_macos_arm}" >> "$GITHUB_OUTPUT"
           echo "sha_macos_intel=${sha_macos_intel}" >> "$GITHUB_OUTPUT"
@@ -162,12 +162,12 @@ jobs:
 
             on_linux do
               on_arm do
-                url "BASE_PLACEHOLDER/envvault-TAG_PLACEHOLDER-aarch64-unknown-linux-gnu.tar.gz"
+                url "BASE_PLACEHOLDER/envvault-TAG_PLACEHOLDER-aarch64-unknown-linux-musl.tar.gz"
                 sha256 "SHA_LINUX_ARM_PLACEHOLDER"
               end
 
               on_intel do
-                url "BASE_PLACEHOLDER/envvault-TAG_PLACEHOLDER-x86_64-unknown-linux-gnu.tar.gz"
+                url "BASE_PLACEHOLDER/envvault-TAG_PLACEHOLDER-x86_64-unknown-linux-musl.tar.gz"
                 sha256 "SHA_LINUX_INTEL_PLACEHOLDER"
               end
             end
