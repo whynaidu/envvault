@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-03-02
+
+### Fixed
+- Switched Linux release builds from glibc (`linux-gnu`) to statically-linked musl (`linux-musl`), fixing `GLIBC_2.39 not found` errors on Amazon Linux and other distros with older glibc
+- Resolved macOS symlink handling in keyfile gitignore test
+- Fixed `cargo fmt` formatting in `env_delete` test
+
+### Changed
+- Optimized GitHub Actions CI workflows
+- Install script (`install.sh`) now downloads musl binaries for Linux
+
 ## [0.4.0] - 2026-02-28
 
 ### Added
@@ -69,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ENVVAULT_PASSWORD` environment variable for CI/CD usage
 - Atomic file writes (temp file + rename)
 
+[0.4.1]: https://github.com/whynaidu/envvault/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/whynaidu/envvault/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/whynaidu/envvault/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/whynaidu/envvault/compare/v0.1.0...v0.2.0
