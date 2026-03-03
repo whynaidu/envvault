@@ -54,14 +54,14 @@ pub fn check_latest_version(current: &str) -> Option<String> {
 #[cfg(feature = "version-check")]
 fn fetch_latest_version() -> Option<String> {
     let resp = ureq::get("https://crates.io/api/v1/crates/envvault")
-        .set(
+        .header(
             "User-Agent",
             &format!("envvault/{}", env!("CARGO_PKG_VERSION")),
         )
         .call()
         .ok()?;
 
-    let body: serde_json::Value = resp.into_json().ok()?;
+    let body: serde_json::Value = resp.into_body().read_json().ok()?;
     let version = body.get("crate")?.get("max_version")?.as_str()?.to_string();
 
     Some(version)

@@ -14,5 +14,7 @@ pub mod init;
 pub mod list;
 pub mod rotate;
 pub mod run;
+pub mod scan;
+pub mod search;
 pub mod set;
 pub mod version;

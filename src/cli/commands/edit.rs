@@ -150,20 +150,47 @@ fn write_temp_file(secrets: &HashMap<String, String>) -> Result<PathBuf> {
     Ok(tmp_path)
 }
 
-/// Find the user's preferred editor.
+/// Find the user's preferred editor, checking in order:
+/// 1. `.envvault.toml` `editor` field
+/// 2. Global config `editor` field
+/// 3. `$VISUAL` environment variable
+/// 4. `$EDITOR` environment variable
+/// 5. `"vi"` fallback
 fn find_editor() -> String {
+    // 1. Project-level config.
+    if let Ok(cwd) = std::env::current_dir() {
+        if let Ok(settings) = crate::config::Settings::load(&cwd) {
+            if let Some(editor) = settings.editor {
+                if !editor.is_empty() {
+                    return editor;
+                }
+            }
+        }
+    }
+
+    // 2. Global config.
+    let global = crate::config::GlobalConfig::load();
+    if let Some(editor) = global.editor {
+        if !editor.is_empty() {
+            return editor;
+        }
+    }
+
+    // 3. $VISUAL
     if let Ok(editor) = std::env::var("VISUAL") {
         if !editor.is_empty() {
             return editor;
         }
     }
 
+    // 4. $EDITOR
     if let Ok(editor) = std::env::var("EDITOR") {
         if !editor.is_empty() {
             return editor;
         }
     }
 
+    // 5. Fallback
     "vi".to_string()
 }
 

@@ -123,31 +123,21 @@ mod tests {
 
     #[test]
     fn keyfile_generate_patches_gitignore() {
-        use clap::Parser;
-
+        // Test the underlying functions directly to avoid set_current_dir(),
+        // which is process-global and races with parallel tests.
         let dir = TempDir::new().unwrap();
-        // Canonicalize to resolve symlinks (macOS: /var -> /private/var)
-        // so the test path matches what std::env::current_dir() returns.
         let dir_path = dir.path().canonicalize().unwrap();
         let kf_path = dir_path.join("vault.keyfile");
 
-        // Change to temp dir so .gitignore is written there.
-        let original_dir = std::env::current_dir().unwrap();
-        std::env::set_current_dir(&dir_path).unwrap();
+        // Generate the keyfile.
+        crate::crypto::keyfile::generate_keyfile(&kf_path).unwrap();
 
-        let cli = crate::cli::Cli::parse_from([
-            "envvault",
-            "--vault-dir",
-            ".",
-            "auth",
-            "keyfile-generate",
-            kf_path.to_str().unwrap(),
-        ]);
-
-        super::execute_keyfile_generate(&cli, Some(kf_path.to_str().unwrap())).unwrap();
-
-        // Restore original dir.
-        std::env::set_current_dir(original_dir).unwrap();
+        // Patch .gitignore with the keyfile path (relative to project dir).
+        let relative = kf_path.strip_prefix(&dir_path).map_or_else(
+            |_| kf_path.to_string_lossy().to_string(),
+            |p| p.to_string_lossy().to_string(),
+        );
+        crate::cli::gitignore::patch_gitignore(&dir_path, &relative);
 
         let gitignore = std::fs::read_to_string(dir_path.join(".gitignore")).unwrap_or_default();
         assert!(

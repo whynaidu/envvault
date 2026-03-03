@@ -1,6 +1,6 @@
 [package]
 name = "envvault-cli"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2021"
 rust-version = "1.70"
 description = "A local-first encrypted environment variable manager"
@@ -34,7 +34,7 @@ argon2 = "0.5.3"
 hkdf = "0.12.4"
 sha2 = "0.10.9"
 hmac = "0.12.1"
-rand = "0.8.5"
+rand = "0.9"
 zeroize = { version = "1.8", features = ["derive"] }
 
 # Serialization
@@ -46,8 +46,8 @@ base64 = "0.22.1"
 # Errors
 thiserror = "2.0"
 
-# Audit log
-rusqlite = { version = "0.31", features = ["bundled"] }
+# Audit log (optional — disable with `--no-default-features` for smaller binary)
+rusqlite = { version = "0.31", features = ["bundled"], optional = true }
 
 # Shell completions
 clap_complete = "4.5"
@@ -56,7 +56,16 @@ clap_complete = "4.5"
 keyring = { version = "3.6", features = ["linux-native"], optional = true }
 
 # Version check (optional — enable with `cargo build --features version-check`)
-ureq = { version = "2.9", features = ["json"], optional = true }
+ureq = { version = "3", features = ["json"], optional = true }
+
+# Regex for secret scanning
+regex = "1"
+
+# Clipboard
+arboard = "3"
+
+# Process isolation (Unix)
+libc = "0.2"
 
 # Constant-time comparison
 subtle = "2.6"
@@ -65,7 +74,8 @@ subtle = "2.6"
 chrono = { version = "0.4.44", features = ["serde"] }
 
 [features]
-default = []
+default = ["audit-log"]
+audit-log = ["dep:rusqlite"]
 keyring-store = ["dep:keyring"]
 version-check = ["dep:ureq"]
 

@@ -14,7 +14,7 @@ const HOOK_NAME: &str = "pre-commit";
 
 /// Common patterns that indicate hardcoded secrets.
 /// Each entry is (pattern_name, regex_pattern).
-const SECRET_PATTERNS: &[(&str, &str)] = &[
+pub const SECRET_PATTERNS: &[(&str, &str)] = &[
     ("AWS Access Key", r"AKIA[0-9A-Z]{16}"),
     (
         "AWS Secret Key",

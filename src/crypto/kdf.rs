@@ -5,7 +5,7 @@
 //! (loaded from `.envvault.toml` or sensible defaults).
 
 use argon2::{Algorithm, Argon2, Params, Version};
-use rand::RngCore;
+use rand::TryRngCore;
 
 use crate::errors::{EnvVaultError, Result};
 
@@ -97,6 +97,8 @@ pub fn derive_master_key_with_params(
 /// Generate a cryptographically random 32-byte salt.
 pub fn generate_salt() -> [u8; SALT_LEN] {
     let mut salt = [0u8; SALT_LEN];
-    rand::rngs::OsRng.fill_bytes(&mut salt);
+    rand::rngs::OsRng
+        .try_fill_bytes(&mut salt)
+        .expect("OS RNG failed");
     salt
 }

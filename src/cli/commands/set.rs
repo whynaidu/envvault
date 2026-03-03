@@ -8,13 +8,15 @@ use crate::errors::Result;
 use crate::vault::VaultStore;
 
 /// Execute the `set` command.
-pub fn execute(cli: &Cli, key: &str, value: Option<&str>) -> Result<()> {
+pub fn execute(cli: &Cli, key: &str, value: Option<&str>, force: bool) -> Result<()> {
     let path = vault_path(cli)?;
 
     // Determine the secret value from one of three sources.
     let secret_value = if let Some(v) = value {
         // Source 1: Inline value on the command line.
-        output::warning("Value provided on command line — it may appear in shell history.");
+        if !force {
+            output::warning("Value provided on command line — it may appear in shell history.");
+        }
         v.to_string()
     } else if !io::stdin().is_terminal() {
         // Source 2: Piped input (stdin is not a terminal).

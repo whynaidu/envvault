@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap — EnvVault</title>
+  <meta name="description" content="EnvVault development roadmap from v0.5 to v1.0. Security hardening, team collaboration, ecosystem integration, and stable release.">
+  <meta name="theme-color" content="#050506">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4a24c'/><text x='16' y='22' text-anchor='middle' fill='%23050506' font-family='sans-serif' font-weight='900' font-size='14'>EV</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="noise" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav__in">
+    <a href="index.html" class="nav__logo">
+      <span class="nav__logo-mark">EV</span>
+      EnvVault
+    </a>
+    <ul class="nav__links" id="nav-links">
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="index.html#how">How It Works</a></li>
+      <li><a href="index.html#compare">Compare</a></li>
+      <li><a href="index.html#install">Install</a></li>
+      <li><a href="index.html#guide">Guide</a></li>
+      <li><a href="roadmap.html" class="active">Roadmap</a></li>
+      <li class="nav__mobile-only"><a href="https://github.com/whynaidu/envvault" target="_blank" rel="noopener">GitHub</a></li>
+      <li class="nav__mobile-only"><a href="index.html#install" class="nav__mobile-cta">Get Started</a></li>
+    </ul>
+    <a href="https://github.com/whynaidu/envvault" class="nav__gh" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <a href="index.html#install" class="nav__cta">Get Started</a>
+    <button class="nav__ham" id="nav-ham" aria-label="Menu" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="rm-hero">
+  <div class="orbs" aria-hidden="true">
+    <div class="orb orb--gold"></div>
+    <div class="orb orb--cyan"></div>
+  </div>
+  <div class="wrap">
+    <div class="hero__pill" data-reveal style="margin:0 auto 28px;width:fit-content">
+      <span class="hero__pill-dot"></span>
+      Living Document &mdash; March 2026
+    </div>
+    <h1 class="rm-hero__title" data-reveal="80">
+      The road to <span class="gt">v1.0</span>
+    </h1>
+    <p class="rm-hero__sub" data-reveal="160">
+      From solo developer tool to team-ready, plugin-extensible secrets platform &mdash; without ever requiring a server.
+    </p>
+  </div>
+</section>
+
+<!-- STATUS -->
+<section class="rm-status">
+  <div class="wrap">
+    <div class="rm-status__grid">
+      <div class="glass rm-stat" data-reveal>
+        <div class="rm-stat__val" data-count="5" data-prefix="v0.">v0.0</div>
+        <div class="rm-stat__label">Current Release</div>
+      </div>
+      <div class="glass rm-stat" data-reveal="80">
+        <div class="rm-stat__val" data-count="21">0</div>
+        <div class="rm-stat__label">CLI Commands</div>
+      </div>
+      <div class="glass rm-stat" data-reveal="160">
+        <div class="rm-stat__val" data-count="217">0</div>
+        <div class="rm-stat__label">Tests Passing</div>
+      </div>
+      <div class="glass rm-stat" data-reveal="240">
+        <div class="rm-stat__val" data-count="5">0</div>
+        <div class="rm-stat__label">Platform Targets</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHIPPED TIMELINE -->
+<section class="rm-tl">
+  <div class="wrap">
+    <div class="label" data-reveal>Shipped</div>
+    <h2 class="h2" data-reveal="80">Five phases <span class="gt--warm">complete</span>.</h2>
+
+    <div class="rail" data-reveal="200">
+      <div class="rail__track">
+        <div class="rail__progress rail__progress--shipped"></div>
+      </div>
+
+      <div class="rail__card rail__card--done">
+        <div class="rail__marker rail__marker--done">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--green">Shipped</div>
+        <div class="rail__ver">v0.1.0</div>
+        <h3 class="rail__title">Core CLI &amp; Encryption Engine</h3>
+        <p class="rail__theme">The foundation &mdash; init, set, get, list, delete, run.</p>
+        <ul class="rail__list">
+          <li>AES-256-GCM per-secret encryption</li>
+          <li>Argon2id key derivation (64 MB)</li>
+          <li>HMAC-SHA256 vault integrity</li>
+          <li>Binary vault format with versioning</li>
+          <li>.envvault.toml configuration</li>
+          <li>Auto-import .env on init</li>
+        </ul>
+      </div>
+
+      <div class="rail__card rail__card--done">
+        <div class="rail__marker rail__marker--done">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--green">Shipped</div>
+        <div class="rail__ver">v0.2.0</div>
+        <h3 class="rail__title">Authentication &amp; Key Management</h3>
+        <p class="rail__theme">Three auth methods, import/export, key rotation.</p>
+        <ul class="rail__list">
+          <li>Keyfile two-factor authentication</li>
+          <li>OS keyring integration</li>
+          <li>rotate-key command</li>
+          <li>Export to .env / JSON</li>
+          <li>Import from .env / JSON</li>
+          <li>Git pre-commit secret scanning</li>
+        </ul>
+      </div>
+
+      <div class="rail__card rail__card--done">
+        <div class="rail__marker rail__marker--done">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--green">Shipped</div>
+        <div class="rail__ver">v0.3.0</div>
+        <h3 class="rail__title">Secret Lifecycle, Audit &amp; Completions</h3>
+        <p class="rail__theme">Diff, edit, environment management, audit log.</p>
+        <ul class="rail__list">
+          <li>diff &mdash; compare environments</li>
+          <li>edit &mdash; $EDITOR integration</li>
+          <li>env list / clone / delete</li>
+          <li>SQLite audit log</li>
+          <li>Shell completions (4 shells)</li>
+          <li>Version check (feature flag)</li>
+        </ul>
+      </div>
+
+      <div class="rail__card rail__card--done">
+        <div class="rail__marker rail__marker--done">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--green">Shipped</div>
+        <div class="rail__ver">v0.4.0</div>
+        <h3 class="rail__title">CI/CD, Distribution &amp; Documentation</h3>
+        <p class="rail__theme">Cross-platform builds, Homebrew, crates.io, full docs.</p>
+        <ul class="rail__list">
+          <li>GitHub Actions CI (3-OS matrix)</li>
+          <li>Release workflow (5 targets)</li>
+          <li>Homebrew formula</li>
+          <li>curl installer + SHA256 verification</li>
+          <li>crates.io publishing</li>
+          <li>README &amp; CHANGELOG</li>
+        </ul>
+      </div>
+
+      <div class="rail__card rail__card--current">
+        <div class="rail__marker rail__marker--current">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--gold">Current</div>
+        <div class="rail__ver">v0.5.0</div>
+        <h3 class="rail__title">Security Hardening + DX Polish</h3>
+        <p class="rail__theme">&ldquo;Make the secure path the easy path.&rdquo;</p>
+        <ul class="rail__list rail__list--gold">
+          <li>AI-Agent Safe Mode (--redact-output, --allowed-commands)</li>
+          <li>Process isolation (prctl, ptrace)</li>
+          <li>Secret scanning + Gitleaks rules</li>
+          <li>Clipboard copy with auto-clear</li>
+          <li>search, --dry-run, --skip-existing</li>
+          <li>Global config, audit hardening</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUTURE ROADMAP -->
+<section class="rm-tl rm-tl--dark">
+  <div class="wrap" style="padding-top:80px;padding-bottom:100px">
+    <div class="label" data-reveal>What's Next</div>
+    <h2 class="h2" data-reveal="80">Five phases to <span class="gt">v1.0</span></h2>
+    <p class="subtitle" data-reveal="160">Priorities shift with community feedback. Contributions welcome.</p>
+
+    <div class="rail rail--future" data-reveal="200">
+      <div class="rail__track">
+        <div class="rail__progress rail__progress--future"></div>
+      </div>
+
+      <!-- v0.6 -->
+      <div class="rail__card rail__card--next">
+        <div class="rail__marker rail__marker--next">
+          <div class="rail__pulse"></div>
+        </div>
+        <div class="rail__badge rail__badge--cyan">Up Next</div>
+        <div class="rail__ver">v0.6.0</div>
+        <h3 class="rail__title">Secret Lifecycle + Metadata</h3>
+        <p class="rail__theme">&ldquo;Secrets expire, rotate, and carry context.&rdquo;</p>
+        <ul class="rail__list">
+          <li>Secret descriptions and tags</li>
+          <li>Vault format v2 + migration</li>
+          <li>Secret expiration (TTL)</li>
+          <li>Secret history &mdash; single-level undo</li>
+          <li>Compliance reports (JSON/PDF)</li>
+          <li>Tamper-evident audit (HMAC chain)</li>
+        </ul>
+      </div>
+
+      <!-- v0.7 -->
+      <div class="rail__card rail__card--planned">
+        <div class="rail__marker rail__marker--planned"></div>
+        <div class="rail__badge rail__badge--dim">Planned</div>
+        <div class="rail__ver">v0.7.0</div>
+        <h3 class="rail__title">Team Collaboration</h3>
+        <p class="rail__theme">&ldquo;From solo tool to team-ready secrets.&rdquo;</p>
+        <ul class="rail__list">
+          <li>X25519 asymmetric encryption</li>
+          <li>Identity management (init, add)</li>
+          <li>Git-based sync with smart merge</li>
+          <li>Per-environment access policies</li>
+          <li>Cryptographic access control</li>
+          <li>Team onboarding/offboarding</li>
+        </ul>
+      </div>
+
+      <!-- v0.8 -->
+      <div class="rail__card rail__card--planned">
+        <div class="rail__marker rail__marker--planned"></div>
+        <div class="rail__badge rail__badge--dim">Planned</div>
+        <div class="rail__ver">v0.8.0</div>
+        <h3 class="rail__title">Ecosystem Integration</h3>
+        <p class="rail__theme">&ldquo;Meet developers where they are.&rdquo;</p>
+        <ul class="rail__list">
+          <li>GitHub Actions + GitLab CI</li>
+          <li>Docker &amp; Kubernetes Secrets</li>
+          <li>Import from SOPS, dotenvx, 1Password</li>
+          <li>Watch mode + framework loaders</li>
+          <li>VS Code extension</li>
+          <li>JetBrains plugin</li>
+        </ul>
+      </div>
+
+      <!-- v0.9 -->
+      <div class="rail__card rail__card--planned">
+        <div class="rail__marker rail__marker--planned"></div>
+        <div class="rail__badge rail__badge--dim">Planned</div>
+        <div class="rail__ver">v0.9.0</div>
+        <h3 class="rail__title">Advanced Security</h3>
+        <p class="rail__theme">&ldquo;Defense in depth for high-security.&rdquo;</p>
+        <ul class="rail__list">
+          <li>YubiKey / FIDO2 hardware keys</li>
+          <li>TPM binding (machine-locked vaults)</li>
+          <li>Memory protection (mlock, guard)</li>
+          <li>Canary secrets (honeypot detection)</li>
+          <li>Encrypted audit log</li>
+          <li>ChaCha20-Poly1305 cipher option</li>
+        </ul>
+      </div>
+
+      <!-- v1.0 -->
+      <div class="rail__card rail__card--v1">
+        <div class="rail__marker rail__marker--v1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050506" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="rail__badge rail__badge--gold">Milestone</div>
+        <div class="rail__ver">v1.0.0</div>
+        <h3 class="rail__title"><span class="gt">Stable Release</span></h3>
+        <p class="rail__theme">&ldquo;Production-ready, battle-tested, fully documented.&rdquo;</p>
+        <ul class="rail__list rail__list--gold">
+          <li>Interactive TUI mode (ratatui)</li>
+          <li>WASM plugin system</li>
+          <li>Python, Node.js, Go SDK bindings</li>
+          <li>Vault format v2 frozen as stable</li>
+          <li>Frozen CLI interface + MSRV policy</li>
+          <li>Comprehensive docs site</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY TABLE -->
+<section class="compare" style="padding:80px 0">
+  <div class="wrap">
+    <div class="table-wrap" data-reveal>
+      <table style="min-width:600px">
+        <thead><tr><th>Version</th><th>Theme</th><th>Key Deliverables</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--green);font-weight:700">v0.1 &mdash; v0.5</td>
+            <td>Foundation + Security</td>
+            <td>Core CLI, crypto engine, auth, audit, CI/CD, AI-safe mode, scanning</td>
+          </tr>
+          <tr><td>v0.6.0</td><td>Secret Lifecycle</td><td>Metadata, TTL, history, compliance reports, vault v2</td></tr>
+          <tr><td>v0.7.0</td><td>Team Collaboration</td><td>Asymmetric encryption, git sync, access policies</td></tr>
+          <tr><td>v0.8.0</td><td>Ecosystem</td><td>CI/CD actions, Docker, framework loaders, IDE extensions</td></tr>
+          <tr><td>v0.9.0</td><td>Advanced Security</td><td>Hardware keys, memory protection, canary secrets</td></tr>
+          <tr>
+            <td style="color:var(--gold);font-weight:700">v1.0.0</td>
+            <td><strong>Stable Release</strong></td>
+            <td>TUI, plugin system, SDKs, frozen API, full docs</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section class="principles">
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="label" data-reveal>Guiding Principles</div>
+      <h2 class="h2" data-reveal="80">What we <span class="gt--warm">believe</span>.</h2>
+    </div>
+
+    <div class="principles__grid">
+      <div class="glass principle" data-reveal>
+        <div class="principle__num">01</div>
+        <div class="principle__title">Local-first, always</div>
+        <div class="principle__desc">Cloud features are opt-in layers. EnvVault works fully offline, forever. No exceptions.</div>
+      </div>
+      <div class="glass principle" data-reveal="100">
+        <div class="principle__num">02</div>
+        <div class="principle__title">Zero infrastructure</div>
+        <div class="principle__desc">No server, no database, no Docker, no cloud account. <code style="color:var(--cyan)">cargo install</code> and go.</div>
+      </div>
+      <div class="glass principle" data-reveal="200">
+        <div class="principle__num">03</div>
+        <div class="principle__title">Secure = easy</div>
+        <div class="principle__desc">The secure path must be the easy path. If devs choose .env because it's easier, we've failed.</div>
+      </div>
+      <div class="glass principle" data-reveal>
+        <div class="principle__num">04</div>
+        <div class="principle__title">Beginner-friendly</div>
+        <div class="principle__desc">Clear errors, helpful tips, rich output. Productive in 5 minutes with zero security background.</div>
+      </div>
+      <div class="glass principle" data-reveal="100">
+        <div class="principle__num">05</div>
+        <div class="principle__title">No vendor lock-in</div>
+        <div class="principle__desc">Export to any format. Import from any tool. The vault format is documented and open.</div>
+      </div>
+      <div class="glass principle" data-reveal="200">
+        <div class="principle__num">06</div>
+        <div class="principle__title">Cryptographic access</div>
+        <div class="principle__desc">Permissions enforced by encryption. No key = no access. No server needed to enforce.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="orbs" aria-hidden="true">
+    <div class="orb orb--gold" style="width:450px;height:450px;top:0;left:25%"></div>
+    <div class="orb orb--cyan" style="width:350px;height:350px;bottom:0;right:30%"></div>
+  </div>
+  <div class="wrap">
+    <h2 class="cta__h2" data-reveal>
+      Shape the future of<br><span class="gt">EnvVault.</span>
+    </h2>
+    <p class="cta__sub" data-reveal="100">
+      This roadmap is community-driven. Star us, open issues, submit PRs. Every voice matters.
+    </p>
+    <div class="cta__actions" data-reveal="200">
+      <a href="https://github.com/whynaidu/envvault" class="btn btn--gold btn--lg" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Star on GitHub
+      </a>
+      <a href="https://github.com/whynaidu/envvault/issues" class="btn btn--outline btn--lg" target="_blank" rel="noopener">
+        Open an Issue
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+      <a href="index.html" class="btn btn--outline btn--lg">
+        Back to Home
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="wrap footer__in">
+    <div class="footer__l">
+      <span class="footer__brand">EnvVault</span>
+      <span class="footer__copy">MIT / Apache-2.0 &mdash; Built with Rust</span>
+    </div>
+    <ul class="footer__links">
+      <li><a href="https://github.com/whynaidu/envvault" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://crates.io/crates/envvault-cli" target="_blank" rel="noopener">Crates.io</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="https://github.com/whynaidu/envvault/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

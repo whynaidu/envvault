@@ -50,12 +50,18 @@ pub enum Commands {
         key: String,
         /// Secret value (omit for interactive prompt)
         value: Option<String>,
+        /// Skip the shell-history warning for inline values
+        #[arg(short, long)]
+        force: bool,
     },
 
     /// Get a secret's value
     Get {
         /// Secret name
         key: String,
+        /// Copy to clipboard (auto-clears after 30 seconds)
+        #[arg(short = 'c', long)]
+        clipboard: bool,
     },
 
     /// List all secrets
@@ -79,10 +85,30 @@ pub enum Commands {
         /// Start with a clean environment (only vault secrets, no inherited vars)
         #[arg(long)]
         clean_env: bool,
+
+        /// Only inject these secrets (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        only: Option<Vec<String>>,
+
+        /// Exclude these secrets (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        exclude: Option<Vec<String>>,
+
+        /// Replace secret values in child process output with [REDACTED]
+        #[arg(long)]
+        redact_output: bool,
+
+        /// Only allow these commands to run (comma-separated basenames)
+        #[arg(long, value_delimiter = ',')]
+        allowed_commands: Option<Vec<String>>,
     },
 
     /// Change the vault's master password
-    RotateKey,
+    RotateKey {
+        /// Path to a new keyfile (or "none" to remove keyfile requirement)
+        #[arg(long)]
+        new_keyfile: Option<String>,
+    },
 
     /// Export secrets to a file or stdout
     Export {
@@ -103,6 +129,14 @@ pub enum Commands {
         /// Import format: env (default) or json (auto-detected from extension)
         #[arg(short, long)]
         format: Option<String>,
+
+        /// Preview what would be imported without modifying the vault
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip secrets that already exist in the vault
+        #[arg(long)]
+        skip_existing: bool,
     },
 
     /// Manage authentication methods (keyring, keyfile)
@@ -138,14 +172,58 @@ pub enum Commands {
         shell: String,
     },
 
-    /// View the audit log of vault operations
+    /// Scan files for leaked secrets (API keys, tokens, passwords)
+    Scan {
+        /// Exit with code 1 if secrets are found (for CI/CD)
+        #[arg(long)]
+        ci: bool,
+
+        /// Directory to scan (default: current directory)
+        #[arg(long)]
+        dir: Option<String>,
+
+        /// Path to a gitleaks-format TOML config for additional rules
+        #[arg(long)]
+        gitleaks_config: Option<String>,
+    },
+
+    /// Search secrets by name pattern (supports * and ? wildcards)
+    Search {
+        /// Glob pattern to match (e.g. DB_*, *_KEY, API_?)
+        pattern: String,
+    },
+
+    /// View, export, or purge the audit log
     Audit {
+        /// Subcommand: export, purge (omit to view entries)
+        #[command(subcommand)]
+        action: Option<AuditAction>,
         /// Number of entries to show (default: 50)
         #[arg(long, default_value = "50")]
         last: usize,
         /// Show entries since a duration ago (e.g. 7d, 24h, 30m)
         #[arg(long)]
         since: Option<String>,
+    },
+}
+
+/// Audit subcommands for export and purge.
+#[derive(clap::Subcommand)]
+pub enum AuditAction {
+    /// Export audit log to JSON or CSV
+    Export {
+        /// Output format: json (default) or csv
+        #[arg(long, default_value = "json")]
+        format: String,
+        /// Output file path (prints to stdout if omitted)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+    /// Delete old audit entries
+    Purge {
+        /// Delete entries older than this duration (e.g. 90d, 24h)
+        #[arg(long)]
+        older_than: String,
     },
 }
 
@@ -287,17 +365,36 @@ pub fn vault_path(cli: &Cli) -> Result<std::path::PathBuf> {
     Ok(cwd.join(&cli.vault_dir).join(format!("{env}.vault")))
 }
 
-/// Load the keyfile bytes from the path in CLI args, if provided.
+/// Load the keyfile bytes, checking in order:
+/// 1. `--keyfile` CLI argument
+/// 2. `keyfile_path` in `.envvault.toml`
+/// 3. `keyfile_path` in global config
 ///
-/// Returns `None` if `--keyfile` was not passed.
+/// Returns `None` if no keyfile is configured anywhere.
 pub fn load_keyfile(cli: &Cli) -> Result<Option<Vec<u8>>> {
-    match &cli.keyfile {
-        Some(path) => {
-            let bytes = crate::crypto::keyfile::load_keyfile(std::path::Path::new(path))?;
-            Ok(Some(bytes))
-        }
-        None => Ok(None),
+    // 1. CLI argument takes priority.
+    if let Some(path) = &cli.keyfile {
+        let bytes = crate::crypto::keyfile::load_keyfile(std::path::Path::new(path))?;
+        return Ok(Some(bytes));
     }
+
+    // 2. Project-level config.
+    if let Ok(cwd) = std::env::current_dir() {
+        let settings = crate::config::Settings::load(&cwd).unwrap_or_default();
+        if let Some(ref path) = settings.keyfile_path {
+            let bytes = crate::crypto::keyfile::load_keyfile(std::path::Path::new(path))?;
+            return Ok(Some(bytes));
+        }
+    }
+
+    // 3. Global config.
+    let global = crate::config::GlobalConfig::load();
+    if let Some(ref path) = global.keyfile_path {
+        let bytes = crate::crypto::keyfile::load_keyfile(std::path::Path::new(path))?;
+        return Ok(Some(bytes));
+    }
+
+    Ok(None)
 }
 
 /// Validate that an environment name is safe and sensible.

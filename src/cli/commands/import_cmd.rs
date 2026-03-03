@@ -15,7 +15,13 @@ use crate::errors::{EnvVaultError, Result};
 use crate::vault::VaultStore;
 
 /// Execute the `import` command.
-pub fn execute(cli: &Cli, file_path: &str, format: Option<&str>) -> Result<()> {
+pub fn execute(
+    cli: &Cli,
+    file_path: &str,
+    format: Option<&str>,
+    dry_run: bool,
+    skip_existing: bool,
+) -> Result<()> {
     let vault = vault_path(cli)?;
     let source = Path::new(file_path);
 
@@ -54,10 +60,40 @@ pub fn execute(cli: &Cli, file_path: &str, format: Option<&str>) -> Result<()> {
 
     // Import each secret into the vault.
     let mut count = 0;
+    let mut skipped = 0;
     for (key, value) in &secrets {
-        store.set_secret(key, value)?;
-        output::info(&format!("  + {key}"));
+        if skip_existing && store.contains_key(key) {
+            output::info(&format!("  ~ {key} (skipped, already exists)"));
+            skipped += 1;
+            continue;
+        }
+
+        if dry_run {
+            let label = if store.contains_key(key) {
+                "update"
+            } else {
+                "add"
+            };
+            output::info(&format!("  + {key} (would {label})"));
+        } else {
+            store.set_secret(key, value)?;
+            output::info(&format!("  + {key}"));
+        }
         count += 1;
+    }
+
+    if dry_run {
+        output::info(&format!(
+            "Dry run: {} secrets would be imported from {}{}",
+            count,
+            source.display(),
+            if skipped > 0 {
+                format!(" ({skipped} skipped)")
+            } else {
+                String::new()
+            }
+        ));
+        return Ok(());
     }
 
     store.save()?;
@@ -69,11 +105,17 @@ pub fn execute(cli: &Cli, file_path: &str, format: Option<&str>) -> Result<()> {
         Some(&format!("{count} secrets from {}", source.display())),
     );
 
+    let skip_msg = if skipped > 0 {
+        format!(" ({skipped} skipped)")
+    } else {
+        String::new()
+    };
     output::success(&format!(
-        "Imported {} secrets from {} into '{}' vault",
+        "Imported {} secrets from {} into '{}' vault{}",
         count,
         source.display(),
-        store.environment()
+        store.environment(),
+        skip_msg
     ));
 
     Ok(())

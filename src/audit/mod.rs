@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
 use rusqlite::Connection;
+use serde::Serialize;
 
 use crate::cli::Cli;
 use crate::errors::{EnvVaultError, Result};
@@ -23,6 +24,36 @@ pub struct AuditEntry {
     pub environment: String,
     pub key_name: Option<String>,
     pub details: Option<String>,
+    pub user: Option<String>,
+    pub pid: Option<i64>,
+}
+
+/// Serializable audit entry for JSON/CSV export.
+#[derive(Debug, Clone, Serialize, serde::Deserialize)]
+pub struct AuditEntryExport {
+    pub id: i64,
+    pub timestamp: String,
+    pub operation: String,
+    pub environment: String,
+    pub key_name: Option<String>,
+    pub details: Option<String>,
+    pub user: Option<String>,
+    pub pid: Option<i64>,
+}
+
+impl From<&AuditEntry> for AuditEntryExport {
+    fn from(e: &AuditEntry) -> Self {
+        Self {
+            id: e.id,
+            timestamp: e.timestamp.to_rfc3339(),
+            operation: e.operation.clone(),
+            environment: e.environment.clone(),
+            key_name: e.key_name.clone(),
+            details: e.details.clone(),
+            user: e.user.clone(),
+            pid: e.pid,
+        }
+    }
 }
 
 /// SQLite-backed audit log.
@@ -60,7 +91,22 @@ impl AuditLog {
         )
         .ok()?;
 
+        // Run idempotent schema migration for v0.5.0 (user, pid, index).
+        Self::migrate_v5(&conn);
+
         Some(Self { conn })
+    }
+
+    /// Idempotent migration: add user/pid columns and timestamp index.
+    ///
+    /// SQLite's `ALTER TABLE ADD COLUMN` errors if the column already exists,
+    /// so we silently ignore those errors to make this safe to run every time.
+    fn migrate_v5(conn: &Connection) {
+        let _ = conn.execute_batch("ALTER TABLE audit_log ADD COLUMN user TEXT;");
+        let _ = conn.execute_batch("ALTER TABLE audit_log ADD COLUMN pid INTEGER;");
+        let _ = conn.execute_batch(
+            "CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);",
+        );
     }
 
     /// Record an operation. Fire-and-forget — errors are silently ignored.
@@ -72,10 +118,14 @@ impl AuditLog {
         details: Option<&str>,
     ) {
         let now = Utc::now().to_rfc3339();
+        let user = std::env::var("USER")
+            .or_else(|_| std::env::var("LOGNAME"))
+            .ok();
+        let pid = std::process::id() as i64;
         let _ = self.conn.execute(
-            "INSERT INTO audit_log (timestamp, operation, environment, key_name, details)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![now, operation, environment, key_name, details],
+            "INSERT INTO audit_log (timestamp, operation, environment, key_name, details, user, pid)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            rusqlite::params![now, operation, environment, key_name, details, user, pid],
         );
     }
 
@@ -87,7 +137,7 @@ impl AuditLog {
         let limit_i64 = i64::try_from(limit).unwrap_or(i64::MAX);
         let (sql, params): (&str, Vec<Box<dyn rusqlite::types::ToSql>>) = match since {
             Some(ref ts) => (
-                "SELECT id, timestamp, operation, environment, key_name, details
+                "SELECT id, timestamp, operation, environment, key_name, details, user, pid
                  FROM audit_log
                  WHERE timestamp >= ?1
                  ORDER BY id DESC
@@ -98,7 +148,7 @@ impl AuditLog {
                 ],
             ),
             None => (
-                "SELECT id, timestamp, operation, environment, key_name, details
+                "SELECT id, timestamp, operation, environment, key_name, details, user, pid
                  FROM audit_log
                  ORDER BY id DESC
                  LIMIT ?1",
@@ -126,6 +176,8 @@ impl AuditLog {
                     environment: row.get(3)?,
                     key_name: row.get(4)?,
                     details: row.get(5)?,
+                    user: row.get(6)?,
+                    pid: row.get(7)?,
                 })
             })
             .map_err(|e| EnvVaultError::AuditError(format!("query exec: {e}")))?;
@@ -136,6 +188,19 @@ impl AuditLog {
         }
 
         Ok(entries)
+    }
+
+    /// Delete audit entries older than the given timestamp.
+    /// Returns the number of entries deleted.
+    pub fn purge(&self, before: DateTime<Utc>) -> Result<usize> {
+        let count = self
+            .conn
+            .execute(
+                "DELETE FROM audit_log WHERE timestamp < ?1",
+                rusqlite::params![before.to_rfc3339()],
+            )
+            .map_err(|e| EnvVaultError::AuditError(format!("purge failed: {e}")))?;
+        Ok(count)
     }
 
     /// Return the path to the audit database (for testing/display).
@@ -157,6 +222,28 @@ pub fn log_audit(cli: &Cli, op: &str, key: Option<&str>, details: Option<&str>) 
     if let Some(audit) = AuditLog::open(&vault_dir) {
         audit.log(op, &cli.env, key, details);
     }
+}
+
+/// Log a read operation only if `[audit] log_reads = true` in config.
+///
+/// Used by get/list/run to optionally record read access.
+pub fn log_read_audit(cli: &Cli, op: &str, key: Option<&str>, details: Option<&str>) {
+    let cwd = match std::env::current_dir() {
+        Ok(cwd) => cwd,
+        Err(_) => return,
+    };
+
+    let settings = crate::config::Settings::load(&cwd).unwrap_or_default();
+    if !settings.audit.log_reads {
+        return;
+    }
+
+    log_audit(cli, op, key, details);
+}
+
+/// Always log failed authentication attempts.
+pub fn log_auth_failure(cli: &Cli, details: &str) {
+    log_audit(cli, "auth-failed", None, Some(details));
 }
 
 #[cfg(test)]
@@ -237,7 +324,6 @@ mod tests {
 
     #[test]
     fn open_returns_none_on_bad_path() {
-        // A path that doesn't exist as a directory should fail gracefully.
         let result = AuditLog::open(Path::new("/nonexistent/path/that/does/not/exist"));
         assert!(result.is_none());
     }
@@ -257,5 +343,89 @@ mod tests {
             0o600,
             "audit.db should have 0o600 permissions"
         );
+    }
+
+    #[test]
+    fn migrate_v5_is_idempotent() {
+        let dir = TempDir::new().unwrap();
+        // Open twice — migration runs both times, second should not error.
+        let audit1 = AuditLog::open(dir.path());
+        assert!(audit1.is_some());
+        drop(audit1);
+
+        let audit2 = AuditLog::open(dir.path());
+        assert!(audit2.is_some());
+    }
+
+    #[test]
+    fn log_records_user_and_pid() {
+        let dir = TempDir::new().unwrap();
+        let audit = AuditLog::open(dir.path()).unwrap();
+
+        audit.log("set", "dev", Some("KEY"), None);
+
+        let entries = audit.query(1, None).unwrap();
+        let entry = &entries[0];
+
+        // PID should always be populated.
+        assert!(entry.pid.is_some());
+        assert!(entry.pid.unwrap() > 0);
+
+        // User may or may not be set depending on the environment,
+        // but the field should exist (Some or None).
+    }
+
+    #[test]
+    fn timestamp_index_exists() {
+        let dir = TempDir::new().unwrap();
+        let audit = AuditLog::open(dir.path()).unwrap();
+
+        // Query sqlite_master for our index.
+        let mut stmt = audit
+            .conn
+            .prepare(
+                "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_timestamp'",
+            )
+            .unwrap();
+        let names: Vec<String> = stmt
+            .query_map([], |row| row.get(0))
+            .unwrap()
+            .filter_map(|r| r.ok())
+            .collect();
+
+        assert_eq!(names.len(), 1);
+        assert_eq!(names[0], "idx_audit_timestamp");
+    }
+
+    #[test]
+    fn purge_deletes_old_entries() {
+        let dir = TempDir::new().unwrap();
+        let audit = AuditLog::open(dir.path()).unwrap();
+
+        audit.log("set", "dev", Some("KEY"), None);
+
+        // Purge everything before 1 hour from now — should delete our entry.
+        let future = Utc::now() + chrono::Duration::hours(1);
+        let deleted = audit.purge(future).unwrap();
+        assert_eq!(deleted, 1);
+
+        let entries = audit.query(10, None).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn purge_preserves_recent_entries() {
+        let dir = TempDir::new().unwrap();
+        let audit = AuditLog::open(dir.path()).unwrap();
+
+        audit.log("set", "dev", Some("KEY"), None);
+
+        // Purge everything before 1 hour ago — should NOT delete our recent entry.
+        let past = Utc::now() - chrono::Duration::hours(1);
+        let deleted = audit.purge(past).unwrap();
+        assert_eq!(deleted, 0);
+
+        let entries = audit.query(10, None).unwrap();
+        assert_eq!(entries.len(), 1);
     }
 }

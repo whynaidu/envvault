@@ -81,6 +81,13 @@ pub enum EnvVaultError {
 
     #[error("Environment '{0}' not found — no vault file exists")]
     EnvironmentNotFound(String),
+
+    // --- Phase 5 deferred errors ---
+    #[error("Clipboard error: {0}")]
+    ClipboardError(String),
+
+    #[error("Command not allowed: {0}")]
+    CommandNotAllowed(String),
 }
 
 /// Convenience type alias for EnvVault results.

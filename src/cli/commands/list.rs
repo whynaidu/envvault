@@ -12,7 +12,14 @@ pub fn execute(cli: &Cli) -> Result<()> {
 
     let vault_id = path.to_string_lossy();
     let password = prompt_password_for_vault(Some(&vault_id))?;
-    let store = VaultStore::open(&path, password.as_bytes(), keyfile.as_deref())?;
+    let store = match VaultStore::open(&path, password.as_bytes(), keyfile.as_deref()) {
+        Ok(store) => store,
+        Err(e) => {
+            #[cfg(feature = "audit-log")]
+            crate::audit::log_auth_failure(cli, &e.to_string());
+            return Err(e);
+        }
+    };
 
     let secrets = store.list_secrets();
 
@@ -23,6 +30,14 @@ pub fn execute(cli: &Cli) -> Result<()> {
     ));
 
     output::print_secrets_table(&secrets);
+
+    #[cfg(feature = "audit-log")]
+    crate::audit::log_read_audit(
+        cli,
+        "list",
+        None,
+        Some(&format!("{} secrets", secrets.len())),
+    );
 
     Ok(())
 }

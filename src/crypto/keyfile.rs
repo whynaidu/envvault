@@ -11,7 +11,7 @@ use std::fs;
 use std::path::Path;
 
 use hmac::{Hmac, Mac};
-use rand::RngCore;
+use rand::TryRngCore;
 use sha2::Sha256;
 
 use crate::errors::{EnvVaultError, Result};
@@ -33,7 +33,9 @@ pub fn generate_keyfile(path: &Path) -> Result<Vec<u8>> {
 
     // Generate 32 cryptographically random bytes.
     let mut keyfile = vec![0u8; KEYFILE_LEN];
-    rand::rngs::OsRng.fill_bytes(&mut keyfile);
+    rand::rngs::OsRng
+        .try_fill_bytes(&mut keyfile)
+        .expect("OS RNG failed");
 
     // Ensure the parent directory exists.
     if let Some(parent) = path.parent() {

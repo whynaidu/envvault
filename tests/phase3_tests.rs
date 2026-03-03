@@ -311,6 +311,7 @@ QUOTED_HASH="value # not a comment"
 // Audit log integration test
 // ---------------------------------------------------------------------------
 
+#[cfg(feature = "audit-log")]
 #[test]
 fn audit_log_records_and_queries() {
     use envvault::audit::AuditLog;

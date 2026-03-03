@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-03
+
+### Added
+- `search <pattern>` command — find secrets by glob pattern (`*`, `?` wildcards, case-insensitive)
+- `scan` command — detect leaked secrets in project files using built-in and custom regex patterns
+- `scan --ci` flag — exit code 1 when secrets found (for CI/CD pipelines)
+- `set --force` flag — skip the shell-history warning for inline values
+- `import --dry-run` flag — preview what would be imported without modifying the vault
+- `import --skip-existing` flag — only import new secrets, preserving existing values
+- `run --only` and `--exclude` flags — filter which secrets are injected (comma-separated)
+- `run --redact-output` flag — replace secret values with `[REDACTED]` in child process output
+- `ENVVAULT_INJECTED=true` marker — always injected into child process environment by `run`
+- `audit export` subcommand — export audit log entries to JSON or CSV
+- `audit purge` subcommand — delete audit entries older than a specified duration
+- `[audit] log_reads` config option — optionally log read operations (get, list, run)
+- `[secret_scanning] custom_patterns` config — user-defined regex patterns for `scan`
+- `keyfile_path` config option — default keyfile path in `.envvault.toml` or global config
+- `allowed_environments` config option — restrict valid environment names (typo protection)
+- `editor` config option — set preferred editor for `envvault edit`
+- Global config support (`~/.config/envvault/config.toml`)
+- Audit log schema v5 — added `user`, `pid` columns and timestamp index
+- `get --clipboard` flag — copy secret to clipboard with 30-second auto-clear
+- `rotate-key --new-keyfile` flag — change or remove keyfile during password rotation
+- `run --allowed-commands` flag — restrict which commands can be executed (comma-separated basenames)
+- Process isolation for `run` — prevents `/proc/pid/environ` leaks (Linux) and debugger attachment (macOS)
+- `scan --gitleaks-config` flag — load rules from a gitleaks-format TOML config file
+- `[secret_scanning] gitleaks_config` config option — default gitleaks config path in `.envvault.toml`
+
+### Changed
+- `audit-log` feature flag — audit log can be disabled with `--no-default-features` for smaller binary
+- Upgraded `rand` to 0.9, `ureq` to 3
+- Cleaned up `.gitignore` (removed leaked test artifact paths)
+
 ## [0.4.1] - 2026-03-02
 
 ### Fixed
@@ -80,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ENVVAULT_PASSWORD` environment variable for CI/CD usage
 - Atomic file writes (temp file + rename)
 
+[0.5.0]: https://github.com/whynaidu/envvault/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/whynaidu/envvault/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/whynaidu/envvault/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/whynaidu/envvault/compare/v0.2.0...v0.3.0
