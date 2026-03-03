@@ -166,6 +166,9 @@ pub enum Commands {
     /// Show version and check for updates
     Version,
 
+    /// Update envvault to the latest version
+    Update,
+
     /// Generate shell completion scripts
     Completions {
         /// Shell to generate completions for (bash, zsh, fish, powershell)

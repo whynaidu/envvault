@@ -18,7 +18,7 @@ pub fn execute() -> Result<()> {
                 style(current).red(),
                 style(&latest).green().bold()
             );
-            println!("  Run {} to update", style("cargo install envvault").cyan());
+            println!("  Run {} to update", style("envvault update").cyan());
         }
         None => {
             println!("{}", style("You're up to date!").green());

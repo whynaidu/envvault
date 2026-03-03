@@ -17,4 +17,5 @@ pub mod run;
 pub mod scan;
 pub mod search;
 pub mod set;
+pub mod update;
 pub mod version;

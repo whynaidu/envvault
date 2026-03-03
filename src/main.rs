@@ -85,6 +85,7 @@ fn main() {
         } => envvault::cli::commands::diff::execute(&cli, target_env, show_values),
         Commands::Edit => envvault::cli::commands::edit::execute(&cli),
         Commands::Version => envvault::cli::commands::version::execute(),
+        Commands::Update => envvault::cli::commands::update::execute(),
         Commands::Completions { ref shell } => envvault::cli::commands::completions::execute(shell),
         Commands::Scan {
             ci,
