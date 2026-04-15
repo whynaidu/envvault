@@ -81,6 +81,9 @@ pub enum Commands {
         /// Copy to clipboard (auto-clears after 30 seconds)
         #[arg(short = 'c', long)]
         clipboard: bool,
+        /// Retrieve the previous value (one-level history)
+        #[arg(long)]
+        previous: bool,
     },
 
     /// List all secrets
@@ -98,6 +101,15 @@ pub enum Commands {
 
     /// Delete a secret
     Delete {
+        /// Secret name
+        key: String,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        force: bool,
+    },
+
+    /// Restore a secret's previous value (one-level undo)
+    Rollback {
         /// Secret name
         key: String,
         /// Skip confirmation prompt

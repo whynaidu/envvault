@@ -66,6 +66,11 @@ envvault set ROTATING_TOKEN --expires 90d
 envvault list --expired          # secrets past their expiration
 envvault list --expiring-in 7d   # secrets expiring within a week
 
+# One-level undo history (v0.6+)
+envvault set TOKEN new-value     # retains the previous value
+envvault get TOKEN --previous    # peek at the prior value
+envvault rollback TOKEN          # restore the prior value (prompts unless -f)
+
 # Retrieve a secret
 envvault get DATABASE_URL
 
@@ -90,9 +95,10 @@ envvault -e staging run -- node server.js
 |---------|-------------|
 | `init` | Initialize a new vault (auto-imports `.env`) |
 | `set <KEY> [VALUE]` | Add or update a secret (`--description`, `--tag`, `--expires 30d`, `--no-description`, `--no-tags`, `--no-expires`) |
-| `get <KEY>` | Retrieve a secret's value |
+| `get <KEY>` | Retrieve a secret's value (`--previous` for the prior value, `-c` for clipboard) |
 | `list` | List all secrets (`--tag <PATTERN>`, `--expired`, `--expiring-in 7d`) |
 | `delete <KEY>` | Delete a secret (`-f` to skip confirmation) |
+| `rollback <KEY>` | Restore a secret's previous value (one-level undo; `-f` to skip confirmation) |
 | `run -- <CMD>` | Run a command with secrets as env vars (`--clean-env` for isolation) |
 | `rotate-key` | Change the vault's master password |
 | `export` | Export secrets (`-f env\|json`, `-o <file>`) |

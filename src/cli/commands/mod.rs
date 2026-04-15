@@ -12,6 +12,7 @@ pub mod get;
 pub mod import_cmd;
 pub mod init;
 pub mod list;
+pub mod rollback;
 pub mod rotate;
 pub mod run;
 pub mod scan;

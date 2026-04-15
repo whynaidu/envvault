@@ -36,6 +36,9 @@ pub enum EnvVaultError {
     #[error("Secret '{0}' already exists (use `set` to update)")]
     SecretAlreadyExists(String),
 
+    #[error("Secret '{0}' has no previous value — nothing to roll back to")]
+    NoPreviousValue(String),
+
     // --- Keyfile errors ---
     #[error("Keyfile error: {0}")]
     KeyfileError(String),

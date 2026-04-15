@@ -22,8 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `VaultStore::set_description`, `set_tags`, `set_expires_at` public API
 - `Secret::is_expired()` and `SecretMetadata::is_expired()` helpers
 - `envvault::cli::duration` module — shared duration parser (`m/h/d/w/y`) reused by `set`, `list`, and `audit`
+- **One-level secret history** — `set` now retains the prior encrypted value in a single-slot history
+- `envvault get <KEY> --previous` — decrypt and print the retained prior value (works with `--clipboard`)
+- `envvault rollback <KEY>` — restore the retained prior value and clear the slot (`-f` skips confirmation)
+- `VaultStore::get_previous_secret`, `rollback_secret`, `has_previous`, `previous_updated_at` public API
+- `Secret.previous_encrypted_value` + `previous_updated_at` fields (skip-serializing when absent; format-v2 compatible, no bump)
+- History preserved through save/reopen; wiped on `rotate-key` and `env clone` (those re-encrypt from plaintext)
+- Rollback preserves description, tags, and expiration — it's a value-level undo
 - Tag normalization: trim, drop empties, dedup, sort, 128-char length limit
 - Metadata (description, tags, expires_at) preserved across `set_secret` value updates
+
+### Errors
+- New `EnvVaultError::NoPreviousValue(String)` — raised by `get --previous` and `rollback` when no history is retained
 
 ## [0.5.1] - 2026-03-03
 

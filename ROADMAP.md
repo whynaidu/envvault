@@ -160,12 +160,13 @@ Adds optional `description: Option<String>` and `tags: Vec<String>` fields to ea
 - **Expires column in `list`** — conditionally added when any secret has an expiry; expired entries rendered in red ✅
 - **`envvault audit --expired`** (cross-env compliance view) — deferred. Current implementation is single-vault via `list --expired`. A cross-env view requires opening multiple vaults with separate passwords and will be addressed alongside 6.4 (compliance reports), which already needs the same multi-vault unlock plumbing.
 
-#### 6.3 Secret History / Versioning
+#### 6.3 Secret History / Versioning ✅ *(landed on `claude/review-roadmap-progress-VrRQA`)*
 
-- **Keep previous value** — when `set` updates a secret, store the previous encrypted value as a single-level history entry.
-- **`envvault get KEY --previous`** — retrieve the last-known value before the current one.
-- **`envvault rollback KEY`** — restore the previous value.
-- This is not full version history (that would bloat vault files) — just one level of undo.
+- **Keep previous value** — every `set` that updates an existing secret moves its ciphertext into a single-slot `previous_encrypted_value` field on the `Secret` record. A second update overwrites the slot (one-level history). ✅
+- **`envvault get KEY --previous`** — decrypts and prints the retained prior value (honors `--clipboard`). Errors cleanly when no history is retained. ✅
+- **`envvault rollback KEY`** — promotes the retained prior value back to current, clears the slot, and bumps `updated_at`. Prompts for confirmation unless `-f` is passed. Description / tags / expiration are untouched — rollback is a value-level undo. ✅
+- **Persistence** — history survives save/reopen and is wiped on `rotate-key` / `env clone` (those re-encrypt from plaintext and the old ciphertext wouldn't decrypt under the new key anyway). ✅
+- **Not full version history** — just the single undo slot, so vault files don't bloat. The slot stores ciphertext only, same per-secret key as the current value. ✅
 
 #### 6.4 Compliance Report Generation
 

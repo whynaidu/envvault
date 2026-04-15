@@ -44,9 +44,11 @@ fn main() {
             no_tags,
             no_expires,
         ),
-        Commands::Get { ref key, clipboard } => {
-            envvault::cli::commands::get::execute(&cli, key, clipboard)
-        }
+        Commands::Get {
+            ref key,
+            clipboard,
+            previous,
+        } => envvault::cli::commands::get::execute(&cli, key, clipboard, previous),
         Commands::List {
             ref tags,
             expired,
@@ -54,6 +56,9 @@ fn main() {
         } => envvault::cli::commands::list::execute(&cli, tags, expired, expiring_in.as_deref()),
         Commands::Delete { ref key, force } => {
             envvault::cli::commands::delete::execute(&cli, key, force)
+        }
+        Commands::Rollback { ref key, force } => {
+            envvault::cli::commands::rollback::execute(&cli, key, force)
         }
         Commands::Run {
             ref command,

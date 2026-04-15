@@ -225,15 +225,26 @@ impl VaultStore {
 
         let now = Utc::now();
 
-        // Preserve metadata + original created_at if secret exists.
-        let (created_at, description, tags, expires_at) = match self.secrets.get(name) {
+        // If the secret already exists, preserve metadata and capture
+        // the existing value into the single-level history slot so
+        // `get --previous` and `rollback` can reach it.
+        let (
+            created_at,
+            description,
+            tags,
+            expires_at,
+            previous_encrypted_value,
+            previous_updated_at,
+        ) = match self.secrets.get(name) {
             Some(existing) => (
                 existing.created_at,
                 existing.description.clone(),
                 existing.tags.clone(),
                 existing.expires_at,
+                Some(existing.encrypted_value.clone()),
+                Some(existing.updated_at),
             ),
-            None => (now, None, Vec::new(), None),
+            None => (now, None, Vec::new(), None, None, None),
         };
 
         let secret = Secret {
@@ -244,6 +255,8 @@ impl VaultStore {
             description,
             tags,
             expires_at,
+            previous_encrypted_value,
+            previous_updated_at,
         };
 
         self.secrets.insert(name.to_string(), secret);
@@ -338,6 +351,73 @@ impl VaultStore {
             bad_bytes.zeroize();
             EnvVaultError::SerializationError("secret value is not valid UTF-8".to_string())
         })
+    }
+
+    /// Returns `true` if a previous value is retained for this secret.
+    pub fn has_previous(&self, name: &str) -> bool {
+        self.secrets
+            .get(name)
+            .is_some_and(|s| s.previous_encrypted_value.is_some())
+    }
+
+    /// Decrypt and return the previous plaintext value of a secret.
+    ///
+    /// Returns `NoPreviousValue` if the secret has no retained history
+    /// (either it was never updated, or it was just rolled back).
+    pub fn get_previous_secret(&self, name: &str) -> Result<String> {
+        Self::validate_secret_name(name)?;
+        let secret = self
+            .secrets
+            .get(name)
+            .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
+
+        let previous = secret
+            .previous_encrypted_value
+            .as_ref()
+            .ok_or_else(|| EnvVaultError::NoPreviousValue(name.to_string()))?;
+
+        let mut secret_key = self.master_key.derive_secret_key(name)?;
+        let plaintext_bytes = decrypt(&secret_key, previous)?;
+        secret_key.zeroize();
+
+        String::from_utf8(plaintext_bytes).map_err(|e| {
+            let mut bad_bytes = e.into_bytes();
+            bad_bytes.zeroize();
+            EnvVaultError::SerializationError(
+                "previous secret value is not valid UTF-8".to_string(),
+            )
+        })
+    }
+
+    /// Returns the timestamp when the previous value was current, if any.
+    pub fn previous_updated_at(&self, name: &str) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.secrets.get(name).and_then(|s| s.previous_updated_at)
+    }
+
+    /// Restore the previous value as the current one (one-level undo).
+    ///
+    /// Promotes `previous_encrypted_value` to `encrypted_value`, clears
+    /// the history slot, and bumps `updated_at` to now. Description,
+    /// tags, and expiration are untouched — rollback is a value-level
+    /// operation.
+    ///
+    /// Returns `NoPreviousValue` if there is nothing to roll back to.
+    pub fn rollback_secret(&mut self, name: &str) -> Result<()> {
+        Self::validate_secret_name(name)?;
+        let secret = self
+            .secrets
+            .get_mut(name)
+            .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
+
+        let previous = secret
+            .previous_encrypted_value
+            .take()
+            .ok_or_else(|| EnvVaultError::NoPreviousValue(name.to_string()))?;
+
+        secret.encrypted_value = previous;
+        secret.updated_at = Utc::now();
+        secret.previous_updated_at = None;
+        Ok(())
     }
 
     /// Remove a secret from the vault.

@@ -51,6 +51,28 @@ pub struct Secret {
     /// `run` emits a warning when injecting an expired secret.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<DateTime<Utc>>,
+
+    /// Optional previous encrypted value (vault format v2+).
+    ///
+    /// Whenever `set_secret` updates an existing secret, the current
+    /// encrypted value is moved here so `rollback` can restore it and
+    /// `get --previous` can decrypt it. Only one level of history is
+    /// retained: a second update overwrites the stored previous value.
+    /// Serialized as base64 in JSON, like `encrypted_value`.
+    #[serde(
+        default,
+        serialize_with = "super::format::base64_encode_opt",
+        deserialize_with = "super::format::base64_decode_opt",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub previous_encrypted_value: Option<Vec<u8>>,
+
+    /// Timestamp of the previous value (vault format v2+).
+    ///
+    /// When `previous_encrypted_value` is `Some`, this carries the
+    /// `updated_at` that the secret had when that value was current.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_updated_at: Option<DateTime<Utc>>,
 }
 
 impl Secret {

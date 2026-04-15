@@ -5,7 +5,7 @@ use crate::errors::{EnvVaultError, Result};
 use crate::vault::VaultStore;
 
 /// Execute the `get` command.
-pub fn execute(cli: &Cli, key: &str, clipboard: bool) -> Result<()> {
+pub fn execute(cli: &Cli, key: &str, clipboard: bool, previous: bool) -> Result<()> {
     let path = vault_path(cli)?;
     let keyfile = load_keyfile(cli)?;
 
@@ -21,12 +21,21 @@ pub fn execute(cli: &Cli, key: &str, clipboard: bool) -> Result<()> {
         }
     };
 
-    // Decrypt the secret value.
-    let value = store.get_secret(key)?;
+    // Decrypt either the current value or the retained previous value.
+    let value = if previous {
+        store.get_previous_secret(key)?
+    } else {
+        store.get_secret(key)?
+    };
 
     if clipboard {
         copy_to_clipboard(&value)?;
-        crate::cli::output::success(&format!("Copied '{key}' to clipboard (clears in 30s)"));
+        let label = if previous {
+            format!("previous value of '{key}'")
+        } else {
+            format!("'{key}'")
+        };
+        crate::cli::output::success(&format!("Copied {label} to clipboard (clears in 30s)"));
 
         // Spawn a background process to clear the clipboard after 30 seconds.
         spawn_clipboard_clear();
@@ -35,7 +44,10 @@ pub fn execute(cli: &Cli, key: &str, clipboard: bool) -> Result<()> {
     }
 
     #[cfg(feature = "audit-log")]
-    crate::audit::log_read_audit(cli, "get", Some(key), None);
+    {
+        let op = if previous { "get-previous" } else { "get" };
+        crate::audit::log_read_audit(cli, op, Some(key), None);
+    }
 
     Ok(())
 }

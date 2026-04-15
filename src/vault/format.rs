@@ -318,3 +318,40 @@ where
     let s = String::deserialize(deserializer)?;
     BASE64.decode(&s).map_err(serde::de::Error::custom)
 }
+
+/// Serialize `Option<Vec<u8>>` as a base64 string (or `null`).
+///
+/// Used by `Secret::previous_encrypted_value`, which is optional.
+/// Combined with `skip_serializing_if = "Option::is_none"` on the
+/// field, the JSON key is omitted entirely when the option is `None`.
+pub(crate) fn base64_encode_opt<S>(
+    data: &Option<Vec<u8>>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match data {
+        Some(bytes) => {
+            let encoded = BASE64.encode(bytes);
+            serializer.serialize_str(&encoded)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
+pub(crate) fn base64_decode_opt<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Vec<u8>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    match opt {
+        Some(s) => BASE64
+            .decode(&s)
+            .map(Some)
+            .map_err(serde::de::Error::custom),
+        None => Ok(None),
+    }
+}
