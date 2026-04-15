@@ -133,8 +133,13 @@ fn main() {
             Some(AuditAction::Purge { ref older_than }) => {
                 envvault::cli::commands::audit_cmd::execute_purge(&cli, older_than)
             }
+            Some(AuditAction::Verify) => envvault::cli::commands::audit_cmd::execute_verify(&cli),
             None => envvault::cli::commands::audit_cmd::execute(&cli, last, since.as_deref()),
         },
+        Commands::ComplianceReport {
+            ref format,
+            ref output,
+        } => envvault::cli::commands::compliance_report::execute(&cli, format, output.as_deref()),
         Commands::Auth { ref action } => match action {
             AuthAction::Keyring { delete } => {
                 envvault::cli::commands::auth::execute_keyring(&cli, *delete)

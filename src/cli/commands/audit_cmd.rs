@@ -168,6 +168,51 @@ pub fn execute_purge(_cli: &Cli, _older_than: &str) -> Result<()> {
     ))
 }
 
+// ---------------------------------------------------------------------------
+// Audit verify (tamper-evident hash chain)
+// ---------------------------------------------------------------------------
+
+/// Walk the audit hash chain and report intact / broken status.
+#[cfg(feature = "audit-log")]
+pub fn execute_verify(cli: &Cli) -> Result<()> {
+    use crate::audit::AuditLog;
+    use crate::cli::output as out;
+
+    let cwd = std::env::current_dir()?;
+    let vault_dir = cwd.join(&cli.vault_dir);
+
+    let audit = AuditLog::open(&vault_dir)
+        .ok_or_else(|| EnvVaultError::AuditError("failed to open audit database".into()))?;
+
+    let result = audit.verify_chain()?;
+
+    if result.intact {
+        out::success(&format!(
+            "Audit chain intact — {} entries verified ({} legacy, pre-v6)",
+            result.entries_checked, result.legacy_entries
+        ));
+        Ok(())
+    } else {
+        let id = result
+            .first_broken_id
+            .map_or_else(|| "?".to_string(), |i| i.to_string());
+        out::error(&format!(
+            "Audit chain broken at entry {id} ({} entries checked)",
+            result.entries_checked
+        ));
+        Err(EnvVaultError::AuditError(format!(
+            "hash chain mismatch at entry {id} — the audit log may have been tampered with"
+        )))
+    }
+}
+
+#[cfg(not(feature = "audit-log"))]
+pub fn execute_verify(_cli: &Cli) -> Result<()> {
+    Err(EnvVaultError::AuditError(
+        "audit log not available — rebuild with `cargo build --features audit-log`".into(),
+    ))
+}
+
 /// Parse a human-friendly duration string like "7d", "24h", "30m" and
 /// return a point-in-the-past timestamp (`now - duration`).
 ///

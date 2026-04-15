@@ -239,7 +239,7 @@ pub enum Commands {
 
     /// View, export, or purge the audit log
     Audit {
-        /// Subcommand: export, purge (omit to view entries)
+        /// Subcommand: export, purge, verify (omit to view entries)
         #[command(subcommand)]
         action: Option<AuditAction>,
         /// Number of entries to show (default: 50)
@@ -248,6 +248,16 @@ pub enum Commands {
         /// Show entries since a duration ago (e.g. 7d, 24h, 30m)
         #[arg(long)]
         since: Option<String>,
+    },
+
+    /// Generate a compliance report (vault config, expiries, audit chain)
+    ComplianceReport {
+        /// Output file path (prints to stdout if omitted)
+        #[arg(short, long)]
+        output: Option<String>,
+        /// Report format (only "json" supported)
+        #[arg(long, default_value = "json")]
+        format: String,
     },
 }
 
@@ -269,6 +279,8 @@ pub enum AuditAction {
         #[arg(long)]
         older_than: String,
     },
+    /// Verify the tamper-evident hash chain
+    Verify,
 }
 
 /// Auth subcommands for keyring and keyfile management.

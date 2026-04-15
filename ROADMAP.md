@@ -168,17 +168,20 @@ Adds optional `description: Option<String>` and `tags: Vec<String>` fields to ea
 - **Persistence** — history survives save/reopen and is wiped on `rotate-key` / `env clone` (those re-encrypt from plaintext and the old ciphertext wouldn't decrypt under the new key anyway). ✅
 - **Not full version history** — just the single undo slot, so vault files don't bloat. The slot stores ciphertext only, same per-secret key as the current value. ✅
 
-#### 6.4 Compliance Report Generation
+#### 6.4 Compliance Report Generation ✅ *(landed on `claude/review-roadmap-progress-VrRQA`)*
 
 For organizations going through SOC 2, HIPAA, or PCI-DSS audits:
 
-- **`envvault compliance-report`** — generates a JSON/PDF report containing:
-  - Encryption algorithm and KDF parameters
-  - Key rotation history (from audit log)
-  - Secret access log (if `log_reads = true`)
-  - Expiration status of all secrets
-  - Last audit timestamp
-- **Audit log signing** — append an HMAC chain to audit entries. Each entry includes the hash of the previous entry, creating a tamper-evident log. If any entry is modified or deleted, the chain breaks.
+- **`envvault compliance-report`** — generates a JSON report containing: ✅
+  - Encryption algorithm (`AES-256-GCM`) and KDF parameters (Argon2id with memory/iterations/parallelism)
+  - Vault format version, environment, creation timestamp, keyfile-required flag
+  - Secret inventory counts (total, with description, with tags, with expiration, expired, expiring-within-30d, with history)
+  - Expired secrets list and upcoming-expiry list (sorted by expiry, with `days_remaining`)
+  - Key-rotation history extracted from the audit log
+  - Audit availability, total-entries, last-entry timestamp, chain-verification status, read-logging flag
+- **Audit log hash chain (schema v6)** — each entry's `entry_hash` is `SHA256(prev_hash || "|" || canonical_fields)`. Modifying or deleting any entry invalidates every subsequent hash. `envvault audit verify` walks the chain and reports intact / first-broken-id, exiting non-zero on mismatch. Legacy entries (pre-v6, `NULL` hash) are counted separately. ✅
+- **Format** — JSON only for now; PDF was deferred (requires adding a PDF dep and templating) — external tooling can render the JSON however it likes. ✅
+- **Cross-environment aggregate** — deferred. The current implementation covers one vault per invocation. A multi-vault report needs multi-vault unlock plumbing (also required by the deferred `audit --expired`); both fit cleanly on top of this single-vault foundation.
 
 ---
 

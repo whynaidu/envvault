@@ -1,6 +1,7 @@
 pub mod audit_cmd;
 pub mod auth;
 pub mod completions;
+pub mod compliance_report;
 pub mod delete;
 pub mod diff;
 pub mod edit;

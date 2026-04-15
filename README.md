@@ -71,6 +71,10 @@ envvault set TOKEN new-value     # retains the previous value
 envvault get TOKEN --previous    # peek at the prior value
 envvault rollback TOKEN          # restore the prior value (prompts unless -f)
 
+# Tamper-evident audit log + compliance report (v0.6+)
+envvault audit verify            # walk the SHA-256 hash chain
+envvault compliance-report --output report.json  # SOC 2 / HIPAA / PCI-DSS artifact
+
 # Retrieve a secret
 envvault get DATABASE_URL
 
@@ -108,7 +112,8 @@ envvault -e staging run -- node server.js
 | `env list` | List all vault environments |
 | `env clone <TARGET>` | Clone current environment (`--new-password`) |
 | `env delete <NAME>` | Delete a vault environment (`-f` to skip confirmation) |
-| `audit` | View audit log (`--last N`, `--since 7d`) |
+| `audit` | View audit log (`--last N`, `--since 7d`, `verify`, `export`, `purge`) |
+| `compliance-report` | Generate a JSON compliance report (`--output <path>`) |
 | `completions <SHELL>` | Generate shell completions (bash, zsh, fish, powershell) |
 | `version` | Show version info |
 | `auth keyring` | Save/delete vault password in OS keyring (`--delete`) |

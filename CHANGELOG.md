@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rollback preserves description, tags, and expiration — it's a value-level undo
 - Tag normalization: trim, drop empties, dedup, sort, 128-char length limit
 - Metadata (description, tags, expires_at) preserved across `set_secret` value updates
+- **Tamper-evident audit log** — each entry now carries an `entry_hash` SHA-256 digest linked to its predecessor, forming a hash chain (audit schema v6)
+- `envvault audit verify` — walks the chain, reports intact / first-broken-id, non-zero exit on mismatch
+- `envvault compliance-report` — single-vault JSON report with encryption config, KDF params, secret/expiration inventory, key-rotation history, and chain-verification status (SOC 2 / HIPAA / PCI-DSS ready)
+- `AuditLog::verify_chain` and `ChainVerification` public API
+- Entries written before the v6 migration are counted as `legacy_entries` and do not themselves flag the chain as broken
 
 ### Errors
 - New `EnvVaultError::NoPreviousValue(String)` — raised by `get --previous` and `rollback` when no history is retained
