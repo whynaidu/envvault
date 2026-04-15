@@ -7,12 +7,22 @@
 //! ```
 //!
 //! - **Magic** (`EVLT`): identifies the file as an EnvVault vault.
-//! - **Version**: format version (currently `1`).
+//! - **Version**: format version (currently `2`). Readers also accept
+//!   `1` for backward compatibility; writers always emit the current
+//!   version, so any v1 vault transparently upgrades on first write.
 //! - **Header length**: little-endian u32 telling us where the header
 //!   JSON ends and the secrets JSON begins.
 //! - **Header JSON**: serialized `VaultHeader`.
 //! - **Secrets JSON**: serialized `Vec<Secret>`.
 //! - **HMAC-SHA256**: 32-byte tag computed over header + secrets bytes.
+//!
+//! ## Format versions
+//!
+//! - **v1** (v0.1.0 – v0.5.x): `Secret` = name, encrypted_value, created_at, updated_at.
+//! - **v2** (v0.6.0+): `Secret` adds optional `description: Option<String>` and
+//!   `tags: Vec<String>`. The fields are `#[serde(default, skip_serializing_if = ...)]`
+//!   so a v2 file with no metadata is byte-identical to a v1 file except
+//!   for the version byte.
 
 use std::fs;
 use std::path::Path;
@@ -32,8 +42,16 @@ use crate::errors::{EnvVaultError, Result};
 /// Magic bytes at the start of every vault file.
 const MAGIC: &[u8; 4] = b"EVLT";
 
-/// Current binary format version.
-pub const CURRENT_VERSION: u8 = 1;
+/// Current binary format version written by this build.
+pub const CURRENT_VERSION: u8 = 2;
+
+/// All format versions this build can read.
+///
+/// When adding a new version, list every version that is still
+/// round-trippable. Opening an older version and saving rewrites the
+/// file with `CURRENT_VERSION` — that's the "migrate on first write"
+/// behavior.
+pub const SUPPORTED_READ_VERSIONS: &[u8] = &[1, 2];
 
 /// Size of the HMAC tag appended to the file (SHA-256 = 32 bytes).
 const HMAC_LEN: usize = 32;
@@ -110,7 +128,13 @@ pub fn write_vault(
     secrets: &[Secret],
     hmac_key: &[u8],
 ) -> Result<()> {
-    let header_bytes = serde_json::to_vec(header)
+    // Normalize the in-header version to the current on-disk version so
+    // opening a v1 vault and saving it transparently upgrades the header
+    // JSON to v2. The on-disk prefix byte is always `CURRENT_VERSION`.
+    let mut header = header.clone();
+    header.version = CURRENT_VERSION;
+
+    let header_bytes = serde_json::to_vec(&header)
         .map_err(|e| EnvVaultError::SerializationError(format!("header: {e}")))?;
     let secrets_bytes = serde_json::to_vec(secrets)
         .map_err(|e| EnvVaultError::SerializationError(format!("secrets: {e}")))?;
@@ -193,9 +217,9 @@ pub fn read_vault(path: &Path) -> Result<RawVault> {
     }
 
     let version = data[4];
-    if version != CURRENT_VERSION {
+    if !SUPPORTED_READ_VERSIONS.contains(&version) {
         return Err(EnvVaultError::InvalidVaultFormat(format!(
-            "unsupported version {version}, expected {CURRENT_VERSION}"
+            "unsupported vault format version {version} (this build supports {SUPPORTED_READ_VERSIONS:?})"
         )));
     }
 

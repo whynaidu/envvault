@@ -6,7 +6,11 @@ use crate::errors::Result;
 use crate::vault::VaultStore;
 
 /// Execute the `list` command.
-pub fn execute(cli: &Cli) -> Result<()> {
+///
+/// `filter_tags` is a list of tag patterns; a secret is included only
+/// if every pattern matches (substring, case-sensitive) against at
+/// least one of the secret's tags. An empty slice returns all secrets.
+pub fn execute(cli: &Cli, filter_tags: &[String]) -> Result<()> {
     let path = vault_path(cli)?;
     let keyfile = load_keyfile(cli)?;
 
@@ -21,13 +25,33 @@ pub fn execute(cli: &Cli) -> Result<()> {
         }
     };
 
-    let secrets = store.list_secrets();
+    let all = store.list_secrets();
+    let secrets: Vec<_> = if filter_tags.is_empty() {
+        all
+    } else {
+        all.into_iter()
+            .filter(|s| {
+                filter_tags
+                    .iter()
+                    .all(|pattern| s.tags.iter().any(|t| t.contains(pattern)))
+            })
+            .collect()
+    };
 
-    output::info(&format!(
-        "{} environment — {} secret(s)",
-        cli.env,
-        secrets.len()
-    ));
+    if filter_tags.is_empty() {
+        output::info(&format!(
+            "{} environment — {} secret(s)",
+            cli.env,
+            secrets.len()
+        ));
+    } else {
+        output::info(&format!(
+            "{} environment — {} secret(s) matching tag filter {:?}",
+            cli.env,
+            secrets.len(),
+            filter_tags
+        ));
+    }
 
     output::print_secrets_table(&secrets);
 

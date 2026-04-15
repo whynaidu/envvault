@@ -53,6 +53,18 @@ pub enum Commands {
         /// Skip the shell-history warning for inline values
         #[arg(short, long)]
         force: bool,
+        /// Human-readable description attached to the secret
+        #[arg(long)]
+        description: Option<String>,
+        /// Tag to attach to the secret (repeatable, e.g. provider:stripe)
+        #[arg(long = "tag", value_name = "TAG")]
+        tags: Vec<String>,
+        /// Clear any existing description on this secret
+        #[arg(long, conflicts_with = "description")]
+        no_description: bool,
+        /// Clear any existing tags on this secret
+        #[arg(long, conflicts_with = "tags")]
+        no_tags: bool,
     },
 
     /// Get a secret's value
@@ -65,7 +77,11 @@ pub enum Commands {
     },
 
     /// List all secrets
-    List,
+    List {
+        /// Filter by tag (substring match; repeatable, AND semantics)
+        #[arg(long = "tag", value_name = "TAG")]
+        tags: Vec<String>,
+    },
 
     /// Delete a secret
     Delete {

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Vault format v2** — `Secret` records now carry optional `description` and `tags` metadata
+- Readers accept both v1 and v2 vaults; any write transparently upgrades a v1 file to v2
+- `envvault set --description <TEXT>` — attach a human-readable description to a secret
+- `envvault set --tag <TAG>` (repeatable) — attach classification tags (e.g., `provider:stripe`)
+- `envvault set --no-description` / `--no-tags` — clear existing metadata
+- `envvault list --tag <PATTERN>` (repeatable, AND semantics) — filter secrets by tag substring
+- `list` output conditionally adds `Description` / `Tags` columns when any secret has metadata
+- `VaultStore::set_description` and `VaultStore::set_tags` public API
+- Tag normalization: trim, drop empties, dedup, sort, 128-char length limit
+- Preserves description/tags on `set_secret` value updates
+
 ## [0.5.1] - 2026-03-03
 
 ### Added

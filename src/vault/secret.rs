@@ -1,9 +1,10 @@
 //! Secret and SecretMetadata types stored inside a vault.
 //!
 //! Each secret holds its name, the encrypted value (as raw bytes),
-//! and creation/update timestamps.  The `encrypted_value` field uses
-//! custom serde helpers so it serializes as a base64 string in JSON
-//! rather than a raw byte array.
+//! creation/update timestamps, and optional metadata (description and
+//! tags) introduced in vault format v2. The `encrypted_value` field
+//! uses custom serde helpers so it serializes as a base64 string in
+//! JSON rather than a raw byte array.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -27,15 +28,33 @@ pub struct Secret {
 
     /// When this secret was last updated.
     pub updated_at: DateTime<Utc>,
+
+    /// Optional human-readable description (vault format v2+).
+    ///
+    /// Absent in v1 vaults; defaults to `None` on read and is omitted
+    /// from JSON when not set, keeping v1/v2 round-trip symmetric for
+    /// secrets that have no description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Optional tags for classification and filtering (vault format v2+).
+    ///
+    /// Each entry is a free-form string, typically in `key:value` form
+    /// (e.g., `provider:stripe`, `tier:prod`). Absent in v1 vaults.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
 }
 
 /// Lightweight metadata about a secret (no encrypted value).
 ///
 /// Returned by `VaultStore::list_secrets` so callers can display
-/// secret names and timestamps without touching any ciphertext.
+/// secret names, timestamps, and v2 metadata without touching any
+/// ciphertext.
 #[derive(Debug, Clone)]
 pub struct SecretMetadata {
     pub name: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub description: Option<String>,
+    pub tags: Vec<String>,
 }

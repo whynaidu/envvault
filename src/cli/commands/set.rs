@@ -8,7 +8,17 @@ use crate::errors::Result;
 use crate::vault::VaultStore;
 
 /// Execute the `set` command.
-pub fn execute(cli: &Cli, key: &str, value: Option<&str>, force: bool) -> Result<()> {
+#[allow(clippy::too_many_arguments)]
+pub fn execute(
+    cli: &Cli,
+    key: &str,
+    value: Option<&str>,
+    force: bool,
+    description: Option<&str>,
+    tags: &[String],
+    no_description: bool,
+    no_tags: bool,
+) -> Result<()> {
     let path = vault_path(cli)?;
 
     // Determine the secret value from one of three sources.
@@ -41,6 +51,22 @@ pub fn execute(cli: &Cli, key: &str, value: Option<&str>, force: bool) -> Result
 
     let existed = store.get_secret(key).is_ok();
     store.set_secret(key, &secret_value)?;
+
+    // Apply metadata updates, if any. Each flag is independent:
+    //   --description / --no-description -> description
+    //   --tag ... / --no-tags             -> tags
+    if let Some(desc) = description {
+        store.set_description(key, Some(desc.to_string()))?;
+    } else if no_description {
+        store.set_description(key, None)?;
+    }
+
+    if !tags.is_empty() {
+        store.set_tags(key, tags.to_vec())?;
+    } else if no_tags {
+        store.set_tags(key, Vec::new())?;
+    }
+
     store.save()?;
 
     let op_detail = if existed { "updated" } else { "added" };

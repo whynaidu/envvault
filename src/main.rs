@@ -26,11 +26,24 @@ fn main() {
             ref key,
             ref value,
             force,
-        } => envvault::cli::commands::set::execute(&cli, key, value.as_deref(), force),
+            ref description,
+            ref tags,
+            no_description,
+            no_tags,
+        } => envvault::cli::commands::set::execute(
+            &cli,
+            key,
+            value.as_deref(),
+            force,
+            description.as_deref(),
+            tags,
+            no_description,
+            no_tags,
+        ),
         Commands::Get { ref key, clipboard } => {
             envvault::cli::commands::get::execute(&cli, key, clipboard)
         }
-        Commands::List => envvault::cli::commands::list::execute(&cli),
+        Commands::List { ref tags } => envvault::cli::commands::list::execute(&cli, tags),
         Commands::Delete { ref key, force } => {
             envvault::cli::commands::delete::execute(&cli, key, force)
         }

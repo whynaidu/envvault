@@ -205,6 +205,10 @@ impl VaultStore {
     /// The plaintext value is encrypted with a per-secret key derived
     /// from the master key + secret name.  The per-secret key is
     /// zeroized immediately after use.
+    ///
+    /// If the secret already exists, its `description` and `tags`
+    /// metadata are preserved. Use `set_description` / `set_tags` to
+    /// modify them.
     pub fn set_secret(&mut self, name: &str, plaintext_value: &str) -> Result<()> {
         Self::validate_secret_name(name)?;
 
@@ -221,20 +225,74 @@ impl VaultStore {
 
         let now = Utc::now();
 
-        // If the secret already exists, preserve the original created_at.
-        let created_at = self
-            .secrets
-            .get(name)
-            .map_or(now, |existing| existing.created_at);
+        // Preserve description/tags + original created_at if secret exists.
+        let (created_at, description, tags) = match self.secrets.get(name) {
+            Some(existing) => (
+                existing.created_at,
+                existing.description.clone(),
+                existing.tags.clone(),
+            ),
+            None => (now, None, Vec::new()),
+        };
 
         let secret = Secret {
             name: name.to_string(),
             encrypted_value,
             created_at,
             updated_at: now,
+            description,
+            tags,
         };
 
         self.secrets.insert(name.to_string(), secret);
+        Ok(())
+    }
+
+    /// Set or clear a secret's description.
+    ///
+    /// `description = None` clears the description. The secret must
+    /// already exist. `updated_at` is bumped because the metadata
+    /// changed.
+    pub fn set_description(&mut self, name: &str, description: Option<String>) -> Result<()> {
+        Self::validate_secret_name(name)?;
+        let secret = self
+            .secrets
+            .get_mut(name)
+            .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
+        secret.description = description;
+        secret.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Replace a secret's tags with the provided list.
+    ///
+    /// Passing an empty `Vec` clears all tags. Tags are deduplicated
+    /// and sorted for deterministic on-disk output. Each tag is
+    /// trimmed and must be non-empty and at most 128 characters.
+    pub fn set_tags(&mut self, name: &str, tags: Vec<String>) -> Result<()> {
+        Self::validate_secret_name(name)?;
+
+        let mut normalized: Vec<String> = tags
+            .into_iter()
+            .map(|t| t.trim().to_string())
+            .filter(|t| !t.is_empty())
+            .collect();
+        for t in &normalized {
+            if t.len() > 128 {
+                return Err(EnvVaultError::CommandFailed(format!(
+                    "tag '{t}' exceeds 128 characters"
+                )));
+            }
+        }
+        normalized.sort();
+        normalized.dedup();
+
+        let secret = self
+            .secrets
+            .get_mut(name)
+            .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
+        secret.tags = normalized;
+        secret.updated_at = Utc::now();
         Ok(())
     }
 
@@ -279,6 +337,8 @@ impl VaultStore {
                 name: s.name.clone(),
                 created_at: s.created_at,
                 updated_at: s.updated_at,
+                description: s.description.clone(),
+                tags: s.tags.clone(),
             })
             .collect();
 

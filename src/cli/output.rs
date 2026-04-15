@@ -33,7 +33,12 @@ pub fn tip(msg: &str) {
     println!("{} {}", style("\u{2192}").dim(), style(msg).dim());
 }
 
-/// Print a table of secret metadata (Name, Created, Updated).
+/// Print a table of secret metadata.
+///
+/// Columns are added conditionally: `Description` and `Tags` columns
+/// only appear when at least one secret in the list has that field
+/// populated, so vaults that don't use v2 metadata render identically
+/// to the v0.5.x output.
 pub fn print_secrets_table(secrets: &[SecretMetadata]) {
     if secrets.is_empty() {
         info("No secrets in this vault yet.");
@@ -41,16 +46,34 @@ pub fn print_secrets_table(secrets: &[SecretMetadata]) {
         return;
     }
 
+    let show_desc = secrets.iter().any(|s| s.description.is_some());
+    let show_tags = secrets.iter().any(|s| !s.tags.is_empty());
+
     let mut table = Table::new();
     table.set_content_arrangement(ContentArrangement::Dynamic);
-    table.set_header(vec!["Name", "Created", "Updated"]);
+
+    let mut header = vec!["Name", "Created", "Updated"];
+    if show_desc {
+        header.push("Description");
+    }
+    if show_tags {
+        header.push("Tags");
+    }
+    table.set_header(header);
 
     for s in secrets {
-        table.add_row(vec![
+        let mut row = vec![
             s.name.clone(),
             s.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
             s.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-        ]);
+        ];
+        if show_desc {
+            row.push(s.description.clone().unwrap_or_default());
+        }
+        if show_tags {
+            row.push(s.tags.join(", "));
+        }
+        table.add_row(row);
     }
 
     println!("{table}");

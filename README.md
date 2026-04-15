@@ -57,11 +57,19 @@ envvault init
 envvault set DATABASE_URL          # interactive prompt (recommended)
 envvault set API_KEY "sk-abc123"   # inline (visible in shell history)
 
+# Attach metadata (v0.6+)
+envvault set STRIPE_KEY --description "Stripe production key" \
+    --tag provider:stripe --tag tier:prod
+
 # Retrieve a secret
 envvault get DATABASE_URL
 
-# List all secrets
+# List all secrets (Description/Tags columns appear if any secret has metadata)
 envvault list
+
+# Filter list by tag (substring match; repeat for AND semantics)
+envvault list --tag stripe
+envvault list --tag stripe --tag prod
 
 # Run a command with secrets injected
 envvault run -- node server.js
@@ -76,9 +84,9 @@ envvault -e staging run -- node server.js
 | Command | Description |
 |---------|-------------|
 | `init` | Initialize a new vault (auto-imports `.env`) |
-| `set <KEY> [VALUE]` | Add or update a secret (omit value for interactive prompt) |
+| `set <KEY> [VALUE]` | Add or update a secret (`--description`, `--tag`, `--no-description`, `--no-tags`) |
 | `get <KEY>` | Retrieve a secret's value |
-| `list` | List all secret names |
+| `list` | List all secrets (`--tag <PATTERN>` to filter by tag substring) |
 | `delete <KEY>` | Delete a secret (`-f` to skip confirmation) |
 | `run -- <CMD>` | Run a command with secrets as env vars (`--clean-env` for isolation) |
 | `rotate-key` | Change the vault's master password |

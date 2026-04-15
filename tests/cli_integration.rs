@@ -114,3 +114,108 @@ fn auth_help_shows_subcommands() {
         .stdout(predicate::str::contains("keyring"))
         .stdout(predicate::str::contains("keyfile-generate"));
 }
+
+#[test]
+fn set_help_exposes_metadata_flags() {
+    envvault()
+        .args(["set", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--description"))
+        .stdout(predicate::str::contains("--tag"))
+        .stdout(predicate::str::contains("--no-description"))
+        .stdout(predicate::str::contains("--no-tags"));
+}
+
+#[test]
+fn list_help_exposes_tag_filter() {
+    envvault()
+        .args(["list", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--tag"));
+}
+
+#[test]
+fn set_description_and_no_description_are_mutually_exclusive() {
+    // Clap should reject passing both on the same invocation.
+    envvault()
+        .args([
+            "set",
+            "KEY",
+            "value",
+            "--description",
+            "desc",
+            "--no-description",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used with"));
+}
+
+#[test]
+fn set_with_metadata_persists_through_list() {
+    // End-to-end: initialize a vault with ENVVAULT_PASSWORD, set a
+    // secret with a description and tags, then verify `list` shows
+    // the metadata columns.
+    let tmp = TempDir::new().unwrap();
+    let vault_dir = tmp.path().join(".envvault");
+    let vault_dir_str = vault_dir.to_str().unwrap();
+    let pw = "phase6-metadata-test";
+
+    envvault()
+        .args(["init", "--vault-dir", vault_dir_str])
+        .current_dir(tmp.path())
+        .env("ENVVAULT_PASSWORD", pw)
+        .assert()
+        .success();
+
+    envvault()
+        .args([
+            "set",
+            "API_KEY",
+            "sk-abcdef",
+            "--force",
+            "--description",
+            "Stripe prod key",
+            "--tag",
+            "provider:stripe",
+            "--tag",
+            "tier:prod",
+            "--vault-dir",
+            vault_dir_str,
+        ])
+        .current_dir(tmp.path())
+        .env("ENVVAULT_PASSWORD", pw)
+        .assert()
+        .success();
+
+    envvault()
+        .args(["list", "--vault-dir", vault_dir_str])
+        .current_dir(tmp.path())
+        .env("ENVVAULT_PASSWORD", pw)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("API_KEY"))
+        .stdout(predicate::str::contains("Stripe prod key"))
+        .stdout(predicate::str::contains("provider:stripe"))
+        .stdout(predicate::str::contains("tier:prod"));
+
+    // Tag filter returns matching secrets.
+    envvault()
+        .args(["list", "--tag", "stripe", "--vault-dir", vault_dir_str])
+        .current_dir(tmp.path())
+        .env("ENVVAULT_PASSWORD", pw)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("API_KEY"));
+
+    // Tag filter that doesn't match returns zero secrets.
+    envvault()
+        .args(["list", "--tag", "nonexistent", "--vault-dir", vault_dir_str])
+        .current_dir(tmp.path())
+        .env("ENVVAULT_PASSWORD", pw)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("0 secret(s)"));
+}

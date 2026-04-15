@@ -137,14 +137,17 @@ The current pre-commit hook detects a fixed set of patterns. Expand to a layered
 
 *Theme: Secrets are not static — they expire, rotate, and carry context.*
 
-#### 6.1 Secret Metadata
+#### 6.1 Secret Metadata ✅ *(landed on `claude/review-roadmap-progress-VrRQA`)*
 
-Add an optional `metadata` field to the `Secret` struct (`HashMap<String, String>`, skip-serializing-if-empty). This enables:
+Adds optional `description: Option<String>` and `tags: Vec<String>` fields to each `Secret`. First-class fields were chosen over a generic `HashMap<String, String>` because tags need `Vec` semantics for filtering and description is a well-understood single value; a generic metadata bag can still be added later for 6.2 (expiry) if needed.
 
-- **Descriptions** — `envvault set API_KEY --description "Stripe production key"`
-- **Tags** — `envvault set API_KEY --tag provider:stripe --tag tier:prod`
-- **`envvault list --tag provider:stripe`** — filter secrets by tag.
-- **Vault format v2** — bump the version byte, implement `migrate_v1_to_v2()` so existing vaults upgrade transparently on first write.
+- **Descriptions** — `envvault set API_KEY --description "Stripe production key"` ✅
+- **Tags** — `envvault set API_KEY --tag provider:stripe --tag tier:prod` ✅
+- **Clear flags** — `--no-description` / `--no-tags` ✅
+- **`envvault list --tag provider`** — substring match, AND semantics when repeated ✅
+- **Vault format v2** — version byte bumped to `2`; readers accept `[1, 2]`; writers always emit `CURRENT_VERSION`, so opening a v1 vault and saving upgrades it transparently ✅
+- **Metadata preservation** — `set_secret` preserves existing description/tags on value update ✅
+- **Tag normalization** — trim, drop empties, dedup, sort, 128-char length limit ✅
 
 #### 6.2 Secret Expiration
 
