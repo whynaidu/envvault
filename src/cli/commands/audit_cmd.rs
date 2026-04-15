@@ -168,38 +168,13 @@ pub fn execute_purge(_cli: &Cli, _older_than: &str) -> Result<()> {
     ))
 }
 
-/// Parse a human-friendly duration string like "7d", "24h", "30m".
+/// Parse a human-friendly duration string like "7d", "24h", "30m" and
+/// return a point-in-the-past timestamp (`now - duration`).
+///
+/// Thin wrapper around `crate::cli::duration::parse_past` kept for
+/// backward compatibility with existing call sites and tests.
 pub fn parse_duration(input: &str) -> Result<chrono::DateTime<chrono::Utc>> {
-    use chrono::Utc;
-
-    let input = input.trim();
-
-    let (num_str, unit) = if let Some(s) = input.strip_suffix('d') {
-        (s, 'd')
-    } else if let Some(s) = input.strip_suffix('h') {
-        (s, 'h')
-    } else if let Some(s) = input.strip_suffix('m') {
-        (s, 'm')
-    } else {
-        return Err(EnvVaultError::CommandFailed(format!(
-            "invalid duration '{input}' — use format like 7d, 24h, or 30m"
-        )));
-    };
-
-    let num: i64 = num_str.parse().map_err(|_| {
-        EnvVaultError::CommandFailed(format!(
-            "invalid duration '{input}' — number part is not valid"
-        ))
-    })?;
-
-    let duration = match unit {
-        'd' => chrono::Duration::days(num),
-        'h' => chrono::Duration::hours(num),
-        'm' => chrono::Duration::minutes(num),
-        _ => unreachable!(),
-    };
-
-    Ok(Utc::now() - duration)
+    crate::cli::duration::parse_past(input)
 }
 
 /// Print audit entries in a formatted table.

@@ -61,6 +61,11 @@ envvault set API_KEY "sk-abc123"   # inline (visible in shell history)
 envvault set STRIPE_KEY --description "Stripe production key" \
     --tag provider:stripe --tag tier:prod
 
+# Attach an expiration (v0.6+)
+envvault set ROTATING_TOKEN --expires 90d
+envvault list --expired          # secrets past their expiration
+envvault list --expiring-in 7d   # secrets expiring within a week
+
 # Retrieve a secret
 envvault get DATABASE_URL
 
@@ -84,9 +89,9 @@ envvault -e staging run -- node server.js
 | Command | Description |
 |---------|-------------|
 | `init` | Initialize a new vault (auto-imports `.env`) |
-| `set <KEY> [VALUE]` | Add or update a secret (`--description`, `--tag`, `--no-description`, `--no-tags`) |
+| `set <KEY> [VALUE]` | Add or update a secret (`--description`, `--tag`, `--expires 30d`, `--no-description`, `--no-tags`, `--no-expires`) |
 | `get <KEY>` | Retrieve a secret's value |
-| `list` | List all secrets (`--tag <PATTERN>` to filter by tag substring) |
+| `list` | List all secrets (`--tag <PATTERN>`, `--expired`, `--expiring-in 7d`) |
 | `delete <KEY>` | Delete a secret (`-f` to skip confirmation) |
 | `run -- <CMD>` | Run a command with secrets as env vars (`--clean-env` for isolation) |
 | `rotate-key` | Change the vault's master password |

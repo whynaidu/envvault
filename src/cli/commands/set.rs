@@ -3,7 +3,7 @@
 use std::io::{self, IsTerminal, Read};
 
 use crate::cli::output;
-use crate::cli::{load_keyfile, prompt_password_for_vault, vault_path, Cli};
+use crate::cli::{duration, load_keyfile, prompt_password_for_vault, vault_path, Cli};
 use crate::errors::Result;
 use crate::vault::VaultStore;
 
@@ -16,10 +16,19 @@ pub fn execute(
     force: bool,
     description: Option<&str>,
     tags: &[String],
+    expires: Option<&str>,
     no_description: bool,
     no_tags: bool,
+    no_expires: bool,
 ) -> Result<()> {
     let path = vault_path(cli)?;
+
+    // Validate expiration duration up front so typos fail before we
+    // prompt for the password.
+    let expires_at = match expires {
+        Some(d) => Some(duration::parse_future(d)?),
+        None => None,
+    };
 
     // Determine the secret value from one of three sources.
     let secret_value = if let Some(v) = value {
@@ -55,6 +64,7 @@ pub fn execute(
     // Apply metadata updates, if any. Each flag is independent:
     //   --description / --no-description -> description
     //   --tag ... / --no-tags             -> tags
+    //   --expires ... / --no-expires      -> expiration
     if let Some(desc) = description {
         store.set_description(key, Some(desc.to_string()))?;
     } else if no_description {
@@ -65,6 +75,12 @@ pub fn execute(
         store.set_tags(key, tags.to_vec())?;
     } else if no_tags {
         store.set_tags(key, Vec::new())?;
+    }
+
+    if let Some(exp) = expires_at {
+        store.set_expires_at(key, Some(exp))?;
+    } else if no_expires {
+        store.set_expires_at(key, None)?;
     }
 
     store.save()?;
@@ -85,6 +101,13 @@ pub fn execute(
             key,
             cli.env,
             store.secret_count()
+        ));
+    }
+
+    if let Some(exp) = expires_at {
+        output::info(&format!(
+            "Expires at {}",
+            exp.format("%Y-%m-%d %H:%M:%S UTC")
         ));
     }
 

@@ -1,6 +1,7 @@
 //! CLI module — Clap argument parser, output helpers, and command implementations.
 
 pub mod commands;
+pub mod duration;
 pub mod env_parser;
 pub mod gitignore;
 pub mod output;
@@ -59,12 +60,18 @@ pub enum Commands {
         /// Tag to attach to the secret (repeatable, e.g. provider:stripe)
         #[arg(long = "tag", value_name = "TAG")]
         tags: Vec<String>,
+        /// Set an expiration from now (e.g. 30m, 24h, 90d, 2w, 1y)
+        #[arg(long, value_name = "DURATION")]
+        expires: Option<String>,
         /// Clear any existing description on this secret
         #[arg(long, conflicts_with = "description")]
         no_description: bool,
         /// Clear any existing tags on this secret
         #[arg(long, conflicts_with = "tags")]
         no_tags: bool,
+        /// Clear any existing expiration on this secret
+        #[arg(long, conflicts_with = "expires")]
+        no_expires: bool,
     },
 
     /// Get a secret's value
@@ -81,6 +88,12 @@ pub enum Commands {
         /// Filter by tag (substring match; repeatable, AND semantics)
         #[arg(long = "tag", value_name = "TAG")]
         tags: Vec<String>,
+        /// Show only expired secrets
+        #[arg(long, conflicts_with = "expiring_in")]
+        expired: bool,
+        /// Show only secrets expiring within this duration (e.g. 7d, 24h)
+        #[arg(long = "expiring-in", value_name = "DURATION")]
+        expiring_in: Option<String>,
     },
 
     /// Delete a secret

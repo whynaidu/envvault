@@ -28,8 +28,10 @@ fn main() {
             force,
             ref description,
             ref tags,
+            ref expires,
             no_description,
             no_tags,
+            no_expires,
         } => envvault::cli::commands::set::execute(
             &cli,
             key,
@@ -37,13 +39,19 @@ fn main() {
             force,
             description.as_deref(),
             tags,
+            expires.as_deref(),
             no_description,
             no_tags,
+            no_expires,
         ),
         Commands::Get { ref key, clipboard } => {
             envvault::cli::commands::get::execute(&cli, key, clipboard)
         }
-        Commands::List { ref tags } => envvault::cli::commands::list::execute(&cli, tags),
+        Commands::List {
+            ref tags,
+            expired,
+            ref expiring_in,
+        } => envvault::cli::commands::list::execute(&cli, tags, expired, expiring_in.as_deref()),
         Commands::Delete { ref key, force } => {
             envvault::cli::commands::delete::execute(&cli, key, force)
         }

@@ -57,6 +57,26 @@ pub fn execute(
         secrets.retain(|k, _| !exclude_keys.iter().any(|e| e == k));
     }
 
+    // Warn about any expired secrets that are actually being injected
+    // (post-filter). Warnings go to stderr so they don't contaminate
+    // piped stdout.
+    let now = chrono::Utc::now();
+    for meta in store.list_secrets() {
+        if let Some(exp) = meta.expires_at {
+            if exp <= now && secrets.contains_key(&meta.name) {
+                let days = (now - exp).num_days();
+                let msg = if days == 0 {
+                    format!("{} expired today", meta.name)
+                } else if days == 1 {
+                    format!("{} expired 1 day ago", meta.name)
+                } else {
+                    format!("{} expired {days} days ago", meta.name)
+                };
+                output::warning(&msg);
+            }
+        }
+    }
+
     if clean_env {
         output::success(&format!(
             "Injected {} secrets into clean environment",

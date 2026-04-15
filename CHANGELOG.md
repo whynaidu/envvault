@@ -8,16 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Vault format v2** — `Secret` records now carry optional `description` and `tags` metadata
+- **Vault format v2** — `Secret` records now carry optional `description`, `tags`, and `expires_at` metadata
 - Readers accept both v1 and v2 vaults; any write transparently upgrades a v1 file to v2
 - `envvault set --description <TEXT>` — attach a human-readable description to a secret
 - `envvault set --tag <TAG>` (repeatable) — attach classification tags (e.g., `provider:stripe`)
-- `envvault set --no-description` / `--no-tags` — clear existing metadata
+- `envvault set --expires <DURATION>` — record an expiration timestamp (e.g. `30m`, `24h`, `90d`, `2w`, `1y`)
+- `envvault set --no-description` / `--no-tags` / `--no-expires` — clear existing metadata
 - `envvault list --tag <PATTERN>` (repeatable, AND semantics) — filter secrets by tag substring
-- `list` output conditionally adds `Description` / `Tags` columns when any secret has metadata
-- `VaultStore::set_description` and `VaultStore::set_tags` public API
+- `envvault list --expired` — show only secrets past their expiration
+- `envvault list --expiring-in <DURATION>` — show secrets expiring within a window
+- `envvault run` now prints a warning on stderr for each expired secret it injects (e.g. `STALE_TOKEN expired 3 days ago`)
+- `list` output conditionally adds `Description` / `Tags` / `Expires` columns when any secret has metadata; expired entries are highlighted in red
+- `VaultStore::set_description`, `set_tags`, `set_expires_at` public API
+- `Secret::is_expired()` and `SecretMetadata::is_expired()` helpers
+- `envvault::cli::duration` module — shared duration parser (`m/h/d/w/y`) reused by `set`, `list`, and `audit`
 - Tag normalization: trim, drop empties, dedup, sort, 128-char length limit
-- Preserves description/tags on `set_secret` value updates
+- Metadata (description, tags, expires_at) preserved across `set_secret` value updates
 
 ## [0.5.1] - 2026-03-03
 

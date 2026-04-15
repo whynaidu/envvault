@@ -149,12 +149,16 @@ Adds optional `description: Option<String>` and `tags: Vec<String>` fields to ea
 - **Metadata preservation** — `set_secret` preserves existing description/tags on value update ✅
 - **Tag normalization** — trim, drop empties, dedup, sort, 128-char length limit ✅
 
-#### 6.2 Secret Expiration
+#### 6.2 Secret Expiration ✅ *(landed on `claude/review-roadmap-progress-VrRQA`)*
 
-- **TTL on secrets** — `envvault set API_KEY --expires 90d` records an expiry timestamp in metadata.
-- **`envvault list --expired`** — show secrets past their expiration date.
-- **Warning on `run`** — when injecting expired secrets, print a warning: `WARNING: API_KEY expired 3 days ago`.
-- **`envvault audit --expired`** — compliance view of all expired secrets across environments.
+- **TTL on secrets** — `envvault set API_KEY --expires 90d` records an expiry timestamp. Units: `m/h/d/w/y`. ✅
+- **Clear expiration** — `envvault set API_KEY --no-expires` ✅
+- **`envvault list --expired`** — show secrets past their expiration date ✅
+- **`envvault list --expiring-in <DURATION>`** — show secrets expiring soon (not in the original roadmap text, but a natural companion) ✅
+- **Warning on `run`** — `WARNING: API_KEY expired 3 days ago` printed to stderr; only fires for secrets actually injected (respects `--only` / `--exclude`) ✅
+- **Expiry preserved on value rotation** — `envvault set KEY newvalue` keeps the existing expiry ✅
+- **Expires column in `list`** — conditionally added when any secret has an expiry; expired entries rendered in red ✅
+- **`envvault audit --expired`** (cross-env compliance view) — deferred. Current implementation is single-vault via `list --expired`. A cross-env view requires opening multiple vaults with separate passwords and will be addressed alongside 6.4 (compliance reports), which already needs the same multi-vault unlock plumbing.
 
 #### 6.3 Secret History / Versioning
 

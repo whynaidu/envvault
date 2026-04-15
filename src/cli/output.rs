@@ -35,10 +35,10 @@ pub fn tip(msg: &str) {
 
 /// Print a table of secret metadata.
 ///
-/// Columns are added conditionally: `Description` and `Tags` columns
-/// only appear when at least one secret in the list has that field
-/// populated, so vaults that don't use v2 metadata render identically
-/// to the v0.5.x output.
+/// Columns are added conditionally: `Description`, `Tags`, and
+/// `Expires` columns only appear when at least one secret in the list
+/// has that field populated, so vaults that don't use v2 metadata
+/// render identically to the v0.5.x output.
 pub fn print_secrets_table(secrets: &[SecretMetadata]) {
     if secrets.is_empty() {
         info("No secrets in this vault yet.");
@@ -48,6 +48,8 @@ pub fn print_secrets_table(secrets: &[SecretMetadata]) {
 
     let show_desc = secrets.iter().any(|s| s.description.is_some());
     let show_tags = secrets.iter().any(|s| !s.tags.is_empty());
+    let show_exp = secrets.iter().any(|s| s.expires_at.is_some());
+    let now = chrono::Utc::now();
 
     let mut table = Table::new();
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -58,6 +60,9 @@ pub fn print_secrets_table(secrets: &[SecretMetadata]) {
     }
     if show_tags {
         header.push("Tags");
+    }
+    if show_exp {
+        header.push("Expires");
     }
     table.set_header(header);
 
@@ -72,6 +77,17 @@ pub fn print_secrets_table(secrets: &[SecretMetadata]) {
         }
         if show_tags {
             row.push(s.tags.join(", "));
+        }
+        if show_exp {
+            row.push(match s.expires_at {
+                Some(exp) if exp <= now => {
+                    style(format!("{} (expired)", exp.format("%Y-%m-%d %H:%M")))
+                        .red()
+                        .to_string()
+                }
+                Some(exp) => exp.format("%Y-%m-%d %H:%M").to_string(),
+                None => String::new(),
+            });
         }
         table.add_row(row);
     }

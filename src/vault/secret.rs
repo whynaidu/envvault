@@ -43,6 +43,24 @@ pub struct Secret {
     /// (e.g., `provider:stripe`, `tier:prod`). Absent in v1 vaults.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
+
+    /// Optional expiration timestamp (vault format v2+).
+    ///
+    /// When set and the current time is past this value, the secret
+    /// is considered expired. `list --expired` surfaces these, and
+    /// `run` emits a warning when injecting an expired secret.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+impl Secret {
+    /// Returns `true` if the secret has an expiration and it is in the past.
+    pub fn is_expired(&self) -> bool {
+        match self.expires_at {
+            Some(exp) => exp <= Utc::now(),
+            None => false,
+        }
+    }
 }
 
 /// Lightweight metadata about a secret (no encrypted value).
@@ -57,4 +75,15 @@ pub struct SecretMetadata {
     pub updated_at: DateTime<Utc>,
     pub description: Option<String>,
     pub tags: Vec<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+impl SecretMetadata {
+    /// Returns `true` if the secret has an expiration and it is in the past.
+    pub fn is_expired(&self) -> bool {
+        match self.expires_at {
+            Some(exp) => exp <= Utc::now(),
+            None => false,
+        }
+    }
 }

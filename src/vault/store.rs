@@ -225,14 +225,15 @@ impl VaultStore {
 
         let now = Utc::now();
 
-        // Preserve description/tags + original created_at if secret exists.
-        let (created_at, description, tags) = match self.secrets.get(name) {
+        // Preserve metadata + original created_at if secret exists.
+        let (created_at, description, tags, expires_at) = match self.secrets.get(name) {
             Some(existing) => (
                 existing.created_at,
                 existing.description.clone(),
                 existing.tags.clone(),
+                existing.expires_at,
             ),
-            None => (now, None, Vec::new()),
+            None => (now, None, Vec::new(), None),
         };
 
         let secret = Secret {
@@ -242,6 +243,7 @@ impl VaultStore {
             updated_at: now,
             description,
             tags,
+            expires_at,
         };
 
         self.secrets.insert(name.to_string(), secret);
@@ -260,6 +262,25 @@ impl VaultStore {
             .get_mut(name)
             .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
         secret.description = description;
+        secret.updated_at = Utc::now();
+        Ok(())
+    }
+
+    /// Set or clear a secret's expiration timestamp.
+    ///
+    /// `expires_at = None` clears the expiration. The secret must
+    /// already exist. `updated_at` is bumped because metadata changed.
+    pub fn set_expires_at(
+        &mut self,
+        name: &str,
+        expires_at: Option<chrono::DateTime<chrono::Utc>>,
+    ) -> Result<()> {
+        Self::validate_secret_name(name)?;
+        let secret = self
+            .secrets
+            .get_mut(name)
+            .ok_or_else(|| EnvVaultError::SecretNotFound(name.to_string()))?;
+        secret.expires_at = expires_at;
         secret.updated_at = Utc::now();
         Ok(())
     }
@@ -339,6 +360,7 @@ impl VaultStore {
                 updated_at: s.updated_at,
                 description: s.description.clone(),
                 tags: s.tags.clone(),
+                expires_at: s.expires_at,
             })
             .collect();
 
