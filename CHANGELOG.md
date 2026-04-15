@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-04-15
+
+Phase 6 — Secret Lifecycle + Metadata. Adds first-class metadata
+(description, tags, expiration), one-level undo history, and a
+tamper-evident audit chain with JSON compliance reports. Vault format
+bumps to v2; v1 files are read transparently and upgrade on first
+write. Test suite grows from 159 to 283.
 
 ### Added
 - **Vault format v2** — `Secret` records now carry optional `description`, `tags`, and `expires_at` metadata
@@ -154,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ENVVAULT_PASSWORD` environment variable for CI/CD usage
 - Atomic file writes (temp file + rename)
 
+[0.6.0]: https://github.com/whynaidu/envvault/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/whynaidu/envvault/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/whynaidu/envvault/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/whynaidu/envvault/compare/v0.4.0...v0.4.1

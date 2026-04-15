@@ -1,23 +1,26 @@
 # EnvVault Roadmap
 
-> Last updated: March 2026
+> Last updated: April 2026
 
-## Where We Are Today (v0.4.0)
+## Where We Are Today (v0.6.0)
 
 EnvVault is a local-first encrypted environment variable manager. It replaces plaintext `.env` files with AES-256-GCM encrypted vault files — no cloud, no server, no infrastructure. Just a CLI and a password.
 
-**What's shipped:**
-- 19 commands covering the full secrets lifecycle (init, set, get, list, delete, run, rotate-key, export, import, diff, edit, env management, audit, completions, auth, version)
+**What's shipped through v0.6.0:**
+- 22 commands covering the full secrets lifecycle (init, set, get, list, delete, run, rotate-key, rollback, export, import, diff, edit, env management, audit, completions, auth, version, update, scan, search, compliance-report)
 - AES-256-GCM per-secret encryption with Argon2id KDF (64 MB memory-hard)
 - HMAC-SHA256 integrity verification, HKDF-SHA256 per-secret key derivation
 - Three auth methods: password, keyfile (two-factor), OS keyring (auto-unlock)
-- SQLite audit log of all vault mutations
-- Git pre-commit hook for secret leak detection
+- SQLite audit log with SHA-256 hash-chain tamper-evidence (`audit verify`)
+- JSON compliance reports (`compliance-report`) covering encryption config, KDF params, secret inventory, expirations, key-rotation history, and chain status
+- Vault format v2: optional per-secret description, tags, expiration, and one-level undo history; v1 vaults upgrade transparently on first write
+- AI-agent safe mode (`run --redact-output`, `--allowed-commands`), process isolation (`prctl` / `ptrace`), clipboard copy with auto-clear
+- Secret scanning (built-in + Gitleaks-format rules), git pre-commit hook
 - Cross-platform: Linux, macOS, Windows (x86_64 + ARM64)
 - Distributed via cargo, Homebrew, curl installer, and GitHub Releases
-- 159 tests, clippy-clean, zero unsafe code
+- 283 tests, clippy-clean, zero unsafe code
 
-**Market position:** EnvVault sits in a unique gap — more features than encrypted-file tools (SOPS, dotenvx, age) but zero infrastructure unlike platforms (Vault, Doppler, Infisical). It's the only local-first CLI with audit logging, multiple auth methods, and per-environment vaults that works offline out of the box.
+**Market position:** EnvVault sits in a unique gap — more features than encrypted-file tools (SOPS, dotenvx, age) but zero infrastructure unlike platforms (Vault, Doppler, Infisical). It's the only local-first CLI with audit logging, multiple auth methods, per-environment vaults, secret lifecycle (metadata, expiration, history), and tamper-evident compliance reports that works offline out of the box.
 
 ---
 
@@ -388,16 +391,16 @@ Vault files are already binary blobs that can be committed to git. Build on this
 
 ---
 
-## Release Timeline (Estimated)
+## Release Timeline
 
-| Version | Theme | Key Deliverables |
-|---------|-------|-----------------|
-| **v0.5.0** | Security + DX | AI-safe mode, clipboard, search, config improvements, audit hardening |
-| **v0.6.0** | Secret Lifecycle | Metadata, TTL/expiry, secret history, compliance reports, vault format v2 |
-| **v0.7.0** | Team Collaboration | Asymmetric encryption, git-based sync, access policies, onboarding |
-| **v0.8.0** | Ecosystem | CI/CD actions, Docker, framework loaders, import from SOPS/dotenvx, IDE extensions |
-| **v0.9.0** | Advanced Security | Hardware keys, memory protection, canary secrets, encrypted audit, ChaCha20 |
-| **v1.0.0** | Stable Release | TUI, plugin system, language SDKs, frozen API/format, docs site |
+| Version | Status | Theme | Key Deliverables |
+|---------|--------|-------|-----------------|
+| **v0.5.0** | ✅ Shipped | Security + DX | AI-safe mode, clipboard, search, config improvements, audit hardening |
+| **v0.6.0** | ✅ Shipped | Secret Lifecycle | Metadata, TTL/expiry, secret history, compliance reports + tamper-evident audit chain, vault format v2 |
+| **v0.7.0** | Planned | Team Collaboration | Asymmetric encryption, git-based sync, access policies, onboarding |
+| **v0.8.0** | Planned | Ecosystem | CI/CD actions, Docker, framework loaders, import from SOPS/dotenvx, IDE extensions |
+| **v0.9.0** | Planned | Advanced Security | Hardware keys, memory protection, canary secrets, encrypted audit, ChaCha20 |
+| **v1.0.0** | Planned | Stable Release | TUI, plugin system, language SDKs, frozen API/format, docs site |
 
 ---
 
